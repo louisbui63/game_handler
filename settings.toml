@@ -1,0 +1,29 @@
+[metadata]
+box_art = "/mnt/games/Games/banner/not found.png"
+
+[general]
+mangohud = true
+mesa_prime = false
+nv_prime = true
+# 0 is for default icd loader
+vk_icd_loader = "/etc/vulkan/icd.d/nvidia_icd.json"
+
+[dummy]
+
+[native]
+args = []
+
+[ryujinx]
+path_to_ryujinx = "/home/louisbui63/.local/share/lutris/runners/ryujinx/publish/Ryujinx"
+
+[wine]
+path_to_wine = "/home/louisbui63/.local/share/lutris/runners/wine/lutris-fshack-7.2-x86_64/bin/wine"
+use_vkd3d = true
+vkd3d_path = "/home/louisbui63/dev/game_handler/vkd3d-proton-2.8/"
+use_dxvk = true
+dxvk_path = "/home/louisbui63/dev/game_handler/dxvk-2.0/"
+use_dxvk_nvapi = true
+dxvk_nvapi_path = "/home/louisbui63/dev/game_handler/dxvk_nvapi0.6/"
+esync = true
+fsync = true
+

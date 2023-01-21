@@ -1,0 +1,12 @@
+[metadata]
+name = "13 Sentinels : Aegis Rim"
+box_art = "/mnt/games/Games/banner/13 sentinels.png"
+release_year = 2019
+path_to_game = "/mnt/part1/Games/13 Sentinels : Aegis Rim/13 Sentinels Aegis Rim [01003FC01670C000][v0][US](nsw2u.xyz).nsp"
+runner = "ryujinx"
+
+# this serves as override for general settings
+[general]
+
+# this serves as override for the native runner settings
+[ryujinx]
