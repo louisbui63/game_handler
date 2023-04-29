@@ -1,29 +1,25 @@
-[metadata]
-box_art = "/mnt/games/Games/banner/not found.png"
-
 [general]
 mangohud = true
-mesa_prime = false
+mesa_prime = true
 nv_prime = true
-# 0 is for default icd loader
-vk_icd_loader = "/etc/vulkan/icd.d/nvidia_icd.json"
+vk_icd_loader = '/etc/vulkan/icd.d/nvidia_icd.json'
 
-[dummy]
+[metadata]
+box_art = ''
 
-[native]
-args = []
+[rpcs3]
+path_to_rpcs3 = '/mnt/games/rpcs3-v0.0.27-14893-a767beec_linux64.AppImage'
 
 [ryujinx]
-path_to_ryujinx = "/home/louisbui63/.local/share/lutris/runners/ryujinx/publish/Ryujinx"
+path_to_ryujinx = '/mnt/games/ryujinx/Ryujinx'
 
 [wine]
-path_to_wine = "/home/louisbui63/.local/share/lutris/runners/wine/lutris-fshack-7.2-x86_64/bin/wine"
-use_vkd3d = true
-vkd3d_path = "/home/louisbui63/dev/game_handler/vkd3d-proton-2.8/"
-use_dxvk = true
-dxvk_path = "/home/louisbui63/dev/game_handler/dxvk-2.0/"
-use_dxvk_nvapi = true
-dxvk_nvapi_path = "/home/louisbui63/dev/game_handler/dxvk_nvapi0.6/"
+dxvk_nvapi_path = './dxvk_nvapi0.6/'
+dxvk_path = './dxvk-2.0/'
 esync = true
 fsync = true
-
+path_to_wine = '/mnt/part2/owned/dev/game_handler/wine-tkg-staging-fsync-git-opt-8.0.r6.g33879905/bin/wine'
+use_dxvk = true
+use_dxvk_nvapi = true
+use_vkd3d = true
+vkd3d_path = './vkd3d-proton-2.8/'
