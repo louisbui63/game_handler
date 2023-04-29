@@ -49,17 +49,18 @@ fn get_widget(
     match v {
         config::CValue::Str(s) => row![
             iced::widget::text(label).width(Length::FillPortion(3)),
-            iced::widget::text_input("", s, {
-                let k1 = k.clone();
-                move |a| Message::SettingChanged(k1.clone(), CValue::Str(a))
-            })
-            .width(Length::FillPortion(3)),
+            iced::widget::text_input("", s)
+                .on_input({
+                    let k1 = k.clone();
+                    move |a| Message::SettingChanged(k1.clone(), CValue::Str(a))
+                })
+                .width(Length::FillPortion(3)),
             iced::widget::toggler(None, uses_default, move |a| {
                 Message::SettingDefaultChanged(k.clone(), a)
             })
             .width(Length::FillPortion(1)),
         ]
-        .height(Length::Units(WIDGET_HEIGHT)),
+        .height(Length::Fixed(WIDGET_HEIGHT as f32)),
         config::CValue::Bool(b) => row![
             iced::widget::text(label).width(Length::FillPortion(3)),
             iced::widget::toggler(None, *b, {
@@ -72,12 +73,12 @@ fn get_widget(
             })
             .width(Length::FillPortion(1)),
         ]
-        .height(Length::Units(WIDGET_HEIGHT)),
+        .height(Length::Fixed(WIDGET_HEIGHT as f32)),
         config::CValue::StrArr(arr) => {
             // log::error!("Feature StrArr() not yet available in config display");
             let mut col = Vec::new();
             for i in 0..(arr.len() / 2) + 1 {
-                let mut row = Vec::new();
+                let mut row: Vec<Element<_>>/*: Vec<Element<'_, Message, _>>*/ = Vec::new();
                 row.push(
                     iced::widget::text_input(
                         "",
@@ -86,19 +87,19 @@ fn get_widget(
                         } else {
                             ""
                         },
-                        {
-                            let k1 = k.clone();
-                            move |a| {
-                                let mut oct = arr.clone();
-                                if 2 * i < oct.len() {
-                                    oct[2 * i] = a;
-                                } else {
-                                    oct.push(a)
-                                }
-                                Message::SettingChanged(k1.clone(), CValue::StrArr(oct))
-                            }
-                        },
                     )
+                    .on_input({
+                        let k1 = k.clone();
+                        move |a| {
+                            let mut oct = arr.clone();
+                            if 2 * i < oct.len() {
+                                oct[2 * i] = a;
+                            } else {
+                                oct.push(a)
+                            }
+                            Message::SettingChanged(k1.clone(), CValue::StrArr(oct))
+                        }
+                    })
                     .width(Length::FillPortion(if 2 * i == arr.len() { 10 } else { 9 }))
                     .into(),
                 );
@@ -126,25 +127,25 @@ fn get_widget(
                             } else {
                                 ""
                             },
-                            {
-                                let k1 = k.clone();
-                                move |a| {
-                                    let mut oct = arr.clone();
-                                    if 2 * i + 1 < oct.len() {
-                                        oct[2 * i + 1] = a;
-                                    } else {
-                                        oct.push(a)
-                                    }
-                                    Message::SettingChanged(k1.clone(), CValue::StrArr(oct))
-                                }
-                            },
                         )
+                        .on_input({
+                            let k1 = k.clone();
+                            move |a| {
+                                let mut oct = arr.clone();
+                                if 2 * i + 1 < oct.len() {
+                                    oct[2 * i + 1] = a;
+                                } else {
+                                    oct.push(a)
+                                }
+                                Message::SettingChanged(k1.clone(), CValue::StrArr(oct))
+                            }
+                        })
                         .width(Length::FillPortion(if 2 * i + 1 == arr.len() {
                             10
                         } else {
                             9
                         }))
-                        .into(),
+                        .into(), //as Element<'_, Message, _>,
                     );
                     if 2 * i + 1 != arr.len() {
                         row.push(
@@ -166,7 +167,7 @@ fn get_widget(
                 }
                 col.push(
                     iced::widget::Row::with_children(row)
-                        .height(Length::Units(WIDGET_HEIGHT))
+                        .height(Length::Fixed(WIDGET_HEIGHT as f32))
                         .into(),
                 );
             }
@@ -179,6 +180,7 @@ fn get_widget(
                 })
                 .width(Length::FillPortion(1)),
             ]
+            .into()
         }
         config::CValue::OneOff(l, s) => row![
             iced::widget::text(label).width(Length::FillPortion(3)),
@@ -204,14 +206,15 @@ fn get_widget(
             })
             .width(Length::FillPortion(1)),
         ]
-        .height(Length::Units(WIDGET_HEIGHT)),
+        .height(Length::Fixed(WIDGET_HEIGHT as f32)),
         config::CValue::PickFile(s) => row![
             iced::widget::text(label).width(Length::FillPortion(6)),
-            iced::widget::text_input("", s, {
-                let k1 = k.clone();
-                move |a| Message::SettingChanged(k1.clone(), CValue::PickFile(a))
-            })
-            .width(Length::FillPortion(5)),
+            iced::widget::text_input("", s)
+                .on_input({
+                    let k1 = k.clone();
+                    move |a| Message::SettingChanged(k1.clone(), CValue::PickFile(a))
+                })
+                .width(Length::FillPortion(5)),
             iced::widget::button(iced_aw::native::icon_text::IconText::new(
                 iced_aw::graphics::icons::Icon::Folder
             ))
@@ -222,15 +225,15 @@ fn get_widget(
             })
             .width(Length::FillPortion(2)),
         ]
-        .height(Length::Units(WIDGET_HEIGHT)),
-
+        .height(Length::Fixed(WIDGET_HEIGHT as f32)),
         CValue::PickFolder(s) => row![
             iced::widget::text(label).width(Length::FillPortion(6)),
-            iced::widget::text_input("", s, {
-                let k1 = k.clone();
-                move |a| Message::SettingChanged(k1.clone(), CValue::PickFolder(a))
-            })
-            .width(Length::FillPortion(5)),
+            iced::widget::text_input("", s)
+                .on_input({
+                    let k1 = k.clone();
+                    move |a| Message::SettingChanged(k1.clone(), CValue::PickFolder(a))
+                })
+                .width(Length::FillPortion(5)),
             iced::widget::button(iced_aw::native::icon_text::IconText::new(
                 iced_aw::graphics::icons::Icon::Folder
             ))
@@ -241,7 +244,7 @@ fn get_widget(
             })
             .width(Length::FillPortion(2)),
         ]
-        .height(Length::Units(WIDGET_HEIGHT)),
+        .height(Length::Fixed(WIDGET_HEIGHT as f32)),
     }
 }
 
@@ -652,7 +655,7 @@ impl Application for MainGUI {
                 let image_size = IMAGE_WIDTH as u16;
 
                 let mut grid: iced_aw::Grid<Message, _, _> =
-                    iced_aw::Grid::with_column_width(image_size + 20);
+                    iced_aw::Grid::with_column_width(image_size as f32 + 20.);
                 for (i, g) in self.games.iter().enumerate() {
                     grid.insert::<Element<Message>>(
                         iced::widget::button(
@@ -662,7 +665,7 @@ impl Application for MainGUI {
                                     g.image.height(),
                                     g.image.as_raw().clone(),
                                 ))
-                                .width(Length::Units(image_size))
+                                .width(Length::Fixed(image_size as f32))
                                 .into(),
                                 iced::widget::text(g.name.clone()).into(),
                             ])
@@ -812,7 +815,7 @@ impl Application for MainGUI {
         let content = column![
             // row![game_viewer, global_settings]
             //     .spacing(10)
-            top_bar.height(Length::Units(50)),
+            top_bar.height(Length::Fixed(50 as f32)),
             iced::widget::scrollable(ge).height(Length::Fill),
         ]
         .spacing(20)
