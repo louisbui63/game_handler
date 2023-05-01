@@ -26,6 +26,7 @@ impl Runner for Rpcs3Runner {
             program: self.path_to_rpcs3.clone(),
             args: vec!["--no-gui".to_owned(), self.path.clone()],
             envs: std::collections::HashMap::new(),
+            cwd: None,
         }
     }
     fn get_subcommands(&self) -> Vec<String> {
@@ -37,6 +38,7 @@ impl Runner for Rpcs3Runner {
                 program: self.path_to_rpcs3.clone(),
                 args: vec![],
                 envs: std::collections::HashMap::new(),
+                cwd: None,
             }),
             _ => None,
         }

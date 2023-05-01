@@ -26,6 +26,7 @@ impl Runner for RyujinxRunner {
             program: self.path_to_ryujinx.clone(),
             args: vec![self.path.clone()],
             envs: std::collections::HashMap::new(),
+            cwd: None,
         }
     }
     fn get_subcommands(&self) -> Vec<String> {
@@ -37,6 +38,7 @@ impl Runner for RyujinxRunner {
                 program: self.path_to_ryujinx.clone(),
                 args: vec![],
                 envs: std::collections::HashMap::new(),
+                cwd: None,
             }),
             _ => None,
         }

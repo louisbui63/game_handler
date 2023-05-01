@@ -20,6 +20,7 @@ impl Runner for MameRunner {
                 self.machine_name.clone(),
             ],
             envs: std::collections::HashMap::new(),
+            cwd: Some(crate::DIRS.data_dir().join("mame")),
         }
     }
     fn get_subcommands(&self) -> Vec<String> {
@@ -31,6 +32,7 @@ impl Runner for MameRunner {
                 program: self.path_to_mame.clone(),
                 args: vec![if self.fullscreen { "-now" } else { "-w" }.to_owned()],
                 envs: std::collections::HashMap::new(),
+                cwd: None,
             }),
             _ => None,
         }

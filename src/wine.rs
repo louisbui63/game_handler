@@ -259,6 +259,7 @@ impl WineRunner {
                 self.path.clone()
             }],
             envs,
+            cwd: None,
         }
     }
 }

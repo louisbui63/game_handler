@@ -7,7 +7,7 @@ mod ryujinx;
 mod wine;
 
 use std::collections::HashMap;
-use std::io::{BufRead, Read, Seek};
+use std::io::{BufRead, Read};
 
 use config::{get_default_config_with_vals, CValue, Cfg};
 use games::Game;
@@ -30,16 +30,23 @@ pub static DIRS: once_cell::sync::Lazy<directories::ProjectDirs> =
 fn main() -> iced::Result {
     pretty_env_logger::init();
     log::info!("Starting...");
+
     log::info!("checking config directory {:?}...", DIRS.config_dir());
     if let Err(e) = std::fs::create_dir_all(DIRS.config_dir().join("games")) {
         log::error!("couldn't ensure the config directory existence or integrity : {e}");
         panic!()
     }
+
     log::info!("checking data directory {:?}...", DIRS.data_dir());
     if let Err(e) = std::fs::create_dir_all(DIRS.data_dir().join("banners")) {
         log::error!("couldn't ensure the data directory existence or integrity : {e}");
         panic!()
     }
+    if let Err(e) = std::fs::create_dir_all(DIRS.data_dir().join("mame")) {
+        log::error!("couldn't ensure the data directory existence or integrity : {e}");
+        panic!()
+    }
+
     MainGUI::run(Settings {
         exit_on_close_request: true,
         ..Default::default()
@@ -269,6 +276,7 @@ fn get_widget(
             iced::widget::button(iced_aw::native::icon_text::IconText::new(
                 iced_aw::graphics::icons::Icon::Folder
             ))
+            .on_press(Message::FolderPicker(k.clone()))
             .width(Length::FillPortion(1)),
             iced::widget::toggler(None, uses_default, move |a| {
                 Message::SettingDefaultChanged(k.clone(), a)

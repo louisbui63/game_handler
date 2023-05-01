@@ -29,6 +29,7 @@ impl Runner for NativeRunner {
             program: self.path.clone(),
             args: self.args.clone(),
             envs: std::collections::HashMap::new(),
+            cwd: None,
         }
     }
 }

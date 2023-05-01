@@ -7,24 +7,23 @@ pub const RUNNERS: [&str; 6] = ["dummy", "native", "wine", "ryujinx", "rpcs3", "
 #[derive(Default, Debug)]
 pub struct Command {
     pub program: String,
+    pub cwd: Option<std::path::PathBuf>,
     pub args: Vec<String>,
     pub envs: HashMap<String, String>,
 }
 
 impl Command {
     fn run(&self) -> Option<subprocess::Popen> {
-        // let mut binding = std::process::Command::new(self.program.clone());
-        // let cmd = binding
-        //     .args(self.args.clone())
-        //     .envs(self.envs.clone())
-        //     .stdin(std::process::Stdio::null())
-        //     .stdout(std::process::Stdio::piped())
-        //     .stderr(std::process::Stdio::inherit());
         let cmd = subprocess::Exec::cmd(self.program.clone())
             .args(self.args.as_slice())
             .env_extend(self.envs.iter().collect::<Vec<_>>().as_slice())
             .stdout(subprocess::Redirection::Pipe)
             .stderr(subprocess::Redirection::Merge)
+            .cwd(if let Some(cwd) = self.cwd.clone() {
+                cwd
+            } else {
+                std::env::current_dir().unwrap()
+            })
             .detached();
         log::info!("running command : {:?}", cmd);
         let out = cmd.popen();
