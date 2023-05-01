@@ -1,15 +1,17 @@
-- [ ] logs + keep track of processes (time played ?) <-- Will require TextArea for best result. Will use something else in the meantime
- <!-- at this stage, the project is usable without major hindrance -->
-- [ ] steamgriddb integration                        <-- The eponymous crate looks promising
+<!-- at this stage, the project is usable without major hindrance -->
+- [x] steamgriddb integration                        <-- The eponymous crate looks promising
+- [ ] tighter integration with existing runners
 - [ ] store integration (itch, gog, steam, egs...)
 - [ ] wine : per game prefix
 - [ ] custom split dropdown widget
 - [ ] runners as plugins
 - [ ] better theme-ing
 - [ ] custom file dialog
+- [ ] in-ui controller support
 
 Ongoing tasks:
 - More runners (Xemu, Cemu, pcsx2, quack, xenia, dolphin, libretro ...)
 
 Requires to wait third party:
 - Rewrite UI code with whatever the Cosmic shell ends up with
+- Better logs (require TextArea widget) also, perhaps using subscriptions

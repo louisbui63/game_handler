@@ -7,11 +7,12 @@ mod ryujinx;
 mod wine;
 
 use std::collections::HashMap;
+use std::io::{BufRead, Read, Seek};
 
 use config::{get_default_config_with_vals, CValue, Cfg};
 use games::Game;
 use iced::executor;
-use iced::widget::{button, column, container, horizontal_rule, radio, row};
+use iced::widget::{button, column, container, radio, row};
 use iced::{Application, Command, Element, Length, Settings, Theme};
 use iced_aw::tabs::TabBarStyles;
 use iced_aw::{TabBar, TabLabel};
@@ -26,7 +27,7 @@ pub static DIRS: once_cell::sync::Lazy<directories::ProjectDirs> =
             .expect("couldn't find home directory")
     });
 
-pub fn main() -> iced::Result {
+fn main() -> iced::Result {
     pretty_env_logger::init();
     log::info!("Starting...");
     log::info!("checking config directory {:?}...", DIRS.config_dir());
@@ -34,8 +35,13 @@ pub fn main() -> iced::Result {
         log::error!("couldn't ensure the config directory existence or integrity : {e}");
         panic!()
     }
+    log::info!("checking data directory {:?}...", DIRS.data_dir());
+    if let Err(e) = std::fs::create_dir_all(DIRS.data_dir().join("banners")) {
+        log::error!("couldn't ensure the data directory existence or integrity : {e}");
+        panic!()
+    }
     MainGUI::run(Settings {
-        // antialiasing: true,
+        exit_on_close_request: true,
         ..Default::default()
     })
 }
@@ -207,24 +213,50 @@ fn get_widget(
             .width(Length::FillPortion(1)),
         ]
         .height(Length::Fixed(WIDGET_HEIGHT as f32)),
-        config::CValue::PickFile(s) => row![
-            iced::widget::text(label).width(Length::FillPortion(6)),
-            iced::widget::text_input("", s)
-                .on_input({
-                    let k1 = k.clone();
-                    move |a| Message::SettingChanged(k1.clone(), CValue::PickFile(a))
+        config::CValue::PickFile(s) => if k == "box_art" {
+            row![
+                iced::widget::text(label).width(Length::FillPortion(6)),
+                iced::widget::text_input("", s)
+                    .on_input({
+                        let k1 = k.clone();
+                        move |a| Message::SettingChanged(k1.clone(), CValue::PickFile(a))
+                    })
+                    .width(Length::FillPortion(4)),
+                iced::widget::button(iced_aw::native::icon_text::IconText::new(
+                    iced_aw::graphics::icons::Icon::Grid
+                ))
+                .on_press(Message::SteamGridDb)
+                .width(Length::FillPortion(1)),
+                iced::widget::button(iced_aw::native::icon_text::IconText::new(
+                    iced_aw::graphics::icons::Icon::Folder
+                ))
+                .on_press(Message::FilePicker(k.clone()))
+                .width(Length::FillPortion(1)),
+                iced::widget::toggler(None, uses_default, move |a| {
+                    Message::SettingDefaultChanged(k.clone(), a)
                 })
-                .width(Length::FillPortion(5)),
-            iced::widget::button(iced_aw::native::icon_text::IconText::new(
-                iced_aw::graphics::icons::Icon::Folder
-            ))
-            .on_press(Message::FilePicker(k.clone()))
-            .width(Length::FillPortion(1)),
-            iced::widget::toggler(None, uses_default, move |a| {
-                Message::SettingDefaultChanged(k.clone(), a)
-            })
-            .width(Length::FillPortion(2)),
-        ]
+                .width(Length::FillPortion(2)),
+            ]
+        } else {
+            row![
+                iced::widget::text(label).width(Length::FillPortion(6)),
+                iced::widget::text_input("", s)
+                    .on_input({
+                        let k1 = k.clone();
+                        move |a| Message::SettingChanged(k1.clone(), CValue::PickFile(a))
+                    })
+                    .width(Length::FillPortion(5)),
+                iced::widget::button(iced_aw::native::icon_text::IconText::new(
+                    iced_aw::graphics::icons::Icon::Folder
+                ))
+                .on_press(Message::FilePicker(k.clone()))
+                .width(Length::FillPortion(1)),
+                iced::widget::toggler(None, uses_default, move |a| {
+                    Message::SettingDefaultChanged(k.clone(), a)
+                })
+                .width(Length::FillPortion(2)),
+            ]
+        }
         .height(Length::Fixed(WIDGET_HEIGHT as f32)),
         CValue::PickFolder(s) => row![
             iced::widget::text(label).width(Length::FillPortion(6)),
@@ -237,7 +269,6 @@ fn get_widget(
             iced::widget::button(iced_aw::native::icon_text::IconText::new(
                 iced_aw::graphics::icons::Icon::Folder
             ))
-            .on_press(Message::FolderPicker(k.clone()))
             .width(Length::FillPortion(1)),
             iced::widget::toggler(None, uses_default, move |a| {
                 Message::SettingDefaultChanged(k.clone(), a)
@@ -255,6 +286,7 @@ enum GridStatus {
     GlobalSettings,
     AddGame,
     GamesSettings,
+    Logs,
 }
 
 impl std::convert::TryFrom<usize> for GridStatus {
@@ -266,6 +298,7 @@ impl std::convert::TryFrom<usize> for GridStatus {
             1 => Ok(Self::GlobalSettings),
             2 => Ok(Self::AddGame),
             3 => Ok(Self::GamesSettings),
+            4 => Ok(Self::Logs),
             _ => Err(()),
         }
     }
@@ -278,6 +311,12 @@ struct MainGUI {
     grid_status: GridStatus,
     temp_settings: Option<Cfg>,
     default_config: HashMap<String, (String, config::CValue)>,
+    steam_grid_db: bool,
+    sgdb_images: Vec<(
+        steamgriddb_api::images::Image,
+        image::ImageBuffer<image::Rgba<u8>, Vec<u8>>,
+    )>,
+    sgdb_selected: Option<usize>,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -302,6 +341,12 @@ enum Message {
     SetGridStatus(GridStatus),
     ApplySettings,
     ApplyCloseSettings,
+    MonotonicClock,
+    KillSelected,
+    SteamGridDb,
+    SGDBThumbSelected(usize),
+    ApplySGDB,
+    CancelSGDB,
 }
 
 struct ButtonStyle();
@@ -350,6 +395,9 @@ impl Application for MainGUI {
                 ),
                 temp_settings: None,
                 grid_status: GridStatus::GamesGrid,
+                steam_grid_db: false,
+                sgdb_images: vec![],
+                sgdb_selected: None,
             },
             Command::none(),
         )
@@ -375,6 +423,8 @@ impl Application for MainGUI {
             }
             Message::RunSelected => {
                 if let Some(i) = self.selected {
+                    self.games[i].process_reader = None;
+                    self.games[i].current_log.clear();
                     self.games[i].run();
                 }
                 Command::none()
@@ -408,6 +458,7 @@ impl Application for MainGUI {
             Message::ApplySettings | Message::ApplyCloseSettings => {
                 match self.grid_status {
                     GridStatus::GamesGrid => unreachable!(),
+                    GridStatus::Logs => unreachable!(),
                     GridStatus::GamesSettings => {
                         let path = self.games[self.selected.unwrap()].path_to_toml.clone();
                         self.games[self.selected.unwrap()] =
@@ -549,8 +600,154 @@ impl Application for MainGUI {
             }
             Message::RunSubcommandSelected(s) => {
                 if let Some(i) = self.selected {
+                    self.games[i].process_reader = None;
+                    self.games[i].current_log.clear();
                     self.games[i].run_subcommand(s);
                 }
+                Command::none()
+            }
+            Message::MonotonicClock => {
+                for g in &mut self.games {
+                    if let Some(ph) = &mut g.process_handle {
+                        if let Some(out) = ph.stdout.take() {
+                            g.process_reader = Some(std::io::BufReader::new(
+                                timeout_readwrite::TimeoutReader::new(
+                                    out,
+                                    std::time::Duration::from_millis(1),
+                                ),
+                            ));
+                        }
+                        if let Some(reader) = &mut g.process_reader {
+                            for _ in 0..100 {
+                                let mut buf = Vec::with_capacity(512);
+                                if let Err(_) = reader.read_until(0x0A, &mut buf) {
+                                    break;
+                                }
+                                g.current_log
+                                    .push_str(&String::from_utf8_lossy(buf.as_slice())[..]);
+                            }
+                            if let Some(_) = ph.poll() {
+                                let mut buf = Vec::with_capacity(2048);
+                                if let Ok(_) = reader.read_to_end(&mut buf) {
+                                    g.current_log
+                                        .push_str(&String::from_utf8_lossy(buf.as_slice())[..]);
+                                }
+                                g.process_handle = None;
+                                g.process_reader = None;
+                            }
+                        }
+                    }
+                }
+                Command::none()
+            }
+            Message::KillSelected => {
+                if let Some(i) = self.selected {
+                    if let Some(ph) = &mut self.games[i].process_handle {
+                        ph.kill().unwrap();
+                    }
+                    if let Some(reader) = &mut self.games[i].process_reader {
+                        let mut buf = Vec::with_capacity(2048);
+                        if let Ok(_) = reader.read_to_end(&mut buf) {
+                            self.games[i]
+                                .current_log
+                                .push_str(&String::from_utf8_lossy(buf.as_slice())[..]);
+                        }
+                    }
+                    self.games[i].process_handle = None;
+                    self.games[i].process_reader = None;
+                }
+                Command::none()
+            }
+            Message::SteamGridDb => {
+                self.steam_grid_db = true;
+                let title = self
+                    .temp_settings
+                    .as_ref()
+                    .unwrap()
+                    .0
+                    .get("name")
+                    .unwrap_or(&CValue::Str("".to_owned()))
+                    .as_string();
+                use steamgriddb_api::query_parameters::QueryType::Grid;
+                use steamgriddb_api::Client;
+                let client = Client::new("2b8131fea6e42e6b8fa178b9a86e6499");
+                let games = tokio::runtime::Handle::current()
+                    .block_on(client.search(&title[..]))
+                    .unwrap();
+                let first_game = games.iter().next().ok_or("No games found").unwrap();
+                let images = tokio::runtime::Handle::current()
+                    .block_on(client.get_images_for_id(
+                        first_game.id,
+                        &Grid(Some(
+                            steamgriddb_api::query_parameters::GridQueryParameters {
+                                dimentions: Some(&[
+                                    steamgriddb_api::query_parameters::GridDimentions::D600x900,
+                                ]),
+                                ..std::default::Default::default()
+                            },
+                        )),
+                    ))
+                    .unwrap();
+
+                let mut out = vec![];
+                for i in images {
+                    if let Ok(resp) = reqwest::blocking::get(i.thumb.clone()) {
+                        if resp.status() == reqwest::StatusCode::OK {
+                            out.push((
+                                i,
+                                image::load_from_memory(&resp.bytes().unwrap())
+                                    .unwrap()
+                                    .to_rgba8(),
+                            ))
+                        }
+                    }
+                }
+                self.sgdb_images = out;
+                Command::none()
+            }
+            Message::SGDBThumbSelected(i) => {
+                self.sgdb_selected = Some(i);
+                Command::none()
+            }
+            Message::ApplySGDB => {
+                let url = &self.sgdb_images[self.sgdb_selected.unwrap()].0.url;
+                let name = self.sgdb_images[self.sgdb_selected.unwrap()]
+                    .0
+                    .id
+                    .to_string()
+                    + match &self.sgdb_images[self.sgdb_selected.unwrap()].0.mime {
+                        steamgriddb_api::images::MimeTypes::Default(tp) => match tp {
+                            steamgriddb_api::query_parameters::MimeType::Png => ".png",
+                            steamgriddb_api::query_parameters::MimeType::Jpeg => ".jpeg",
+                            steamgriddb_api::query_parameters::MimeType::Webp => ".webp",
+                        },
+                        _ => unreachable!(),
+                    };
+
+                if let Ok(resp) = reqwest::blocking::get(url) {
+                    if resp.status() == reqwest::StatusCode::OK {
+                        use std::io::prelude::*;
+                        let path = DIRS.data_dir().join("banners").join(name);
+                        std::fs::File::create(path.clone())
+                            .unwrap()
+                            .write_all(&resp.bytes().unwrap())
+                            .unwrap();
+                        self.temp_settings.as_mut().unwrap().0.insert(
+                            "box_art".to_owned(),
+                            CValue::PickFile(path.to_str().unwrap().to_owned()),
+                        );
+                    }
+                }
+
+                self.sgdb_selected = None;
+                self.steam_grid_db = false;
+                self.sgdb_images.clear();
+                Command::none()
+            }
+            Message::CancelSGDB => {
+                self.sgdb_selected = None;
+                self.steam_grid_db = false;
+                self.sgdb_images.clear();
                 Command::none()
             }
         }
@@ -572,13 +769,18 @@ impl Application for MainGUI {
         if let Some(_) = self.selected {
             top_bar = top_bar
                 .push(TabLabel::Text("Game Settings".to_owned()))
-                .width(Length::FillPortion(4));
-            resizer = 1;
+                .push(TabLabel::Text("Logs".to_owned()))
+                .width(Length::FillPortion(5));
+            resizer = 2;
         }
 
         let run_module: iced::Element<_> = if let Some(g) = self.selected {
             row![
-                iced::widget::button(iced::widget::text("run")).on_press(Message::RunSelected),
+                if let None = self.games[g].process_handle {
+                    iced::widget::button(iced::widget::text("run")).on_press(Message::RunSelected)
+                } else {
+                    iced::widget::button(iced::widget::text("kill")).on_press(Message::KillSelected)
+                },
                 iced::widget::pick_list(self.games[g].get_subcommands(), None, |i| {
                     Message::RunSubcommandSelected(i)
                 }) // .width(Length::Units(30))
@@ -592,51 +794,14 @@ impl Application for MainGUI {
 
         let top_bar = row![
             top_bar,
-            iced::widget::Space::with_width(Length::FillPortion(2 - resizer)),
+            iced::widget::Space::with_width(if resizer == 2 {
+                Length::Fixed(0.)
+            } else {
+                Length::FillPortion(2 - resizer)
+            }),
             run_module,
         ]
         .align_items(iced::Alignment::End);
-
-        // let mut game_viewer = row![column![
-        //     iced::widget::text(if let Some(i) = self.selected {
-        //         self.games[i].name.clone()
-        //     } else {
-        //         "no game selected".to_owned()
-        //     }),
-        //     {
-        //         let mut c = iced::widget::Column::new();
-        //         if let Some(i) = self.selected {
-        //             for i in self.games[i].get_subcommands() {
-        //                 c = c.push(
-        //                     iced::widget::button(iced::widget::text(i.clone()))
-        //                         .on_press(Message::RunSubcommandSelected(i)),
-        //                 );
-        //             }
-        //         }
-        //         c
-        //     }
-        // ]
-        // .spacing(10)];
-
-        // if let Some(_) = self.selected {
-        //     let mut column = column![];
-        //     column = column.push(
-        //         iced::widget::button(iced::widget::text("run")).on_press(Message::RunSelected),
-        //     );
-        //     if let GridStatus::GamesGrid = self.grid_status {
-        //         column = column.push(
-        //             iced::widget::button(iced::widget::text("game settings"))
-        //                 .on_press(Message::ToggleSettings),
-        //         );
-        //     }
-        //     game_viewer = game_viewer.push(column);
-        // }
-
-        // let global_settings = column![
-        //     iced::widget::button(iced::widget::text("global settings"))
-        //         .on_press(Message::ToggleGlobalSettings),
-        //     iced::widget::button(iced::widget::text("add game")).on_press(Message::ToggleAddGame),
-        // ];
 
         let choose_theme = [ThemeType::Light, ThemeType::Dark].iter().fold(
             column!["Choose a theme:"].spacing(10),
@@ -738,7 +903,7 @@ impl Application for MainGUI {
                     }
                     for k in cat {
                         let i = self.default_config.get(&k).unwrap(); //expect(&format!("{k}")[..]);
-                        let s = k.split(':').collect::<Vec<_>>();
+                                                                      // let s = k.split(':').collect::<Vec<_>>();
                         let (v, uses_default) =
                             if let Some(v) = self.temp_settings.as_ref().unwrap().0.get(&k) {
                                 (v, false)
@@ -810,17 +975,76 @@ impl Application for MainGUI {
 
                 options.into()
             }
+            GridStatus::Logs => {
+                iced::widget::scrollable(iced::widget::text(if let Some(g) = self.selected {
+                    self.games[g].current_log.clone()
+                } else {
+                    String::new()
+                }))
+                .width(Length::Fill)
+                .into()
+            }
         };
 
         let content = column![
             // row![game_viewer, global_settings]
             //     .spacing(10)
-            top_bar.height(Length::Fixed(50 as f32)),
+            top_bar.height(Length::Fixed(30 as f32)),
             iced::widget::scrollable(ge).height(Length::Fill),
         ]
         .spacing(20)
         .padding(20)
         .width(Length::Fill);
+
+        let content: Element<_> = if self.steam_grid_db {
+            iced_aw::modal::Modal::new(true, content, || {
+                column![
+                    iced::widget::Space::with_height(Length::FillPortion(1)),
+                    iced_aw::Card::new(iced::widget::text("Choose a banner"), {
+                        let mut grid: iced_aw::Grid<Message, _, _> =
+                            iced_aw::Grid::with_column_width(IMAGE_WIDTH as f32 + 20.);
+                        for (i, im) in self.sgdb_images.iter().enumerate() {
+                            grid.insert::<Element<Message>>(
+                                iced::widget::button(
+                                    iced::widget::column(vec![iced::widget::image(
+                                        iced::widget::image::Handle::from_pixels(
+                                            im.1.width(),
+                                            im.1.height(),
+                                            im.1.as_raw().clone(),
+                                        ),
+                                    )
+                                    .width(Length::Fixed(IMAGE_WIDTH as f32))
+                                    .into()])
+                                    .align_items(iced::Alignment::Center),
+                                )
+                                .on_press(Message::SGDBThumbSelected(i))
+                                .style(if Some(i) != self.sgdb_selected {
+                                    iced::theme::Button::Custom(Box::new(ButtonStyle()))
+                                } else {
+                                    iced::theme::Button::default()
+                                })
+                                .into(),
+                            );
+                        }
+                        iced::widget::scrollable(column![
+                            grid,
+                            row![
+                                iced::widget::button(iced::widget::text("Cancel"))
+                                    .on_press(Message::CancelSGDB),
+                                iced::widget::button(iced::widget::text("Ok"))
+                                    .on_press(Message::ApplySGDB),
+                            ]
+                        ])
+                    })
+                    .height(Length::FillPortion(10)),
+                    iced::widget::Space::with_height(Length::FillPortion(1)),
+                ]
+                .into()
+            })
+            .into()
+        } else {
+            content.into()
+        };
 
         container(content)
             .width(Length::Fill)
@@ -828,6 +1052,10 @@ impl Application for MainGUI {
             .center_x()
             .center_y()
             .into()
+    }
+
+    fn subscription(&self) -> iced::Subscription<Self::Message> {
+        iced::time::every(iced::time::Duration::from_millis(1000)).map(|_| Message::MonotonicClock)
     }
 
     fn theme(&self) -> Theme {

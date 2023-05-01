@@ -548,6 +548,9 @@ impl Cfg {
             bare_config: self,
 
             path_to_toml: toml,
+            process_handle: None,
+            current_log: String::new(),
+            process_reader: None,
         }
     }
 }

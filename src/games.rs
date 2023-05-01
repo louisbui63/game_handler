@@ -12,12 +12,29 @@ pub struct Command {
 }
 
 impl Command {
-    fn run(&self) {
-        let mut binding = std::process::Command::new(self.program.clone());
-        let cmd = binding.args(self.args.clone()).envs(self.envs.clone());
+    fn run(&self) -> Option<subprocess::Popen> {
+        // let mut binding = std::process::Command::new(self.program.clone());
+        // let cmd = binding
+        //     .args(self.args.clone())
+        //     .envs(self.envs.clone())
+        //     .stdin(std::process::Stdio::null())
+        //     .stdout(std::process::Stdio::piped())
+        //     .stderr(std::process::Stdio::inherit());
+        let cmd = subprocess::Exec::cmd(self.program.clone())
+            .args(self.args.as_slice())
+            .env_extend(self.envs.iter().collect::<Vec<_>>().as_slice())
+            .stdout(subprocess::Redirection::Pipe)
+            .stderr(subprocess::Redirection::Merge)
+            .detached();
         log::info!("running command : {:?}", cmd);
-        if let Err(e) = cmd.spawn() {
-            log::error!("error {e} while running command {:?}", cmd);
+        let out = cmd.popen();
+
+        if let Err(e) = out {
+            log::error!("error {e} while running command");
+            None
+        } else {
+            let out = out.unwrap();
+            Some(out)
         }
     }
 
@@ -56,7 +73,7 @@ pub trait Runner {
     fn get_subcommands(&self) -> Vec<String> {
         vec![]
     }
-    fn get_subcommand_command(&self, command: String) -> Option<Command> {
+    fn get_subcommand_command(&self, _command: String) -> Option<Command> {
         None
     }
 }
@@ -77,6 +94,10 @@ pub struct Game {
     pub path_to_toml: String,
 
     pub bare_config: crate::config::Cfg,
+
+    pub process_handle: Option<subprocess::Popen>,
+    pub process_reader: Option<std::io::BufReader<timeout_readwrite::TimeoutReader<std::fs::File>>>,
+    pub current_log: String,
 }
 
 impl Game {
@@ -84,19 +105,19 @@ impl Game {
         crate::config::Cfg::from_toml(path).to_game(default, path.to_owned())
     }
 
-    pub fn run(&self) {
+    pub fn run(&mut self) {
         let mut cmd = self.runner.get_command();
         cmd.apply_config(&self.config);
         // eprintln!("{:?}", cmd);
-        cmd.run()
+        self.process_handle = cmd.run();
     }
 
-    pub fn run_subcommand(&self, a: String) {
+    pub fn run_subcommand(&mut self, a: String) {
         let cmd = self.runner.get_subcommand_command(a);
         if let Some(mut cmd) = cmd {
             cmd.apply_config(&self.config);
             // eprintln!("{:?}", cmd);
-            cmd.run()
+            self.process_handle = cmd.run();
         }
     }
 
