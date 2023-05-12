@@ -2,7 +2,9 @@ use std::{collections::HashMap, str::FromStr};
 
 use toml::Value;
 
-pub const RUNNERS: [&str; 6] = ["dummy", "native", "wine", "ryujinx", "rpcs3", "mame"];
+pub const RUNNERS: [&str; 7] = [
+    "dummy", "native", "wine", "ryujinx", "rpcs3", "mame", "pcsx2",
+];
 
 #[derive(Default, Debug)]
 pub struct Command {
@@ -85,23 +87,31 @@ pub struct Game {
     pub box_art: Option<String>,
     pub release_year: Option<isize>,
     pub image: image::RgbaImage,
-    pub path_to_game: String,
+    pub path_to_game: std::path::PathBuf,
     pub runner_id: String,
     pub runner: Box<dyn Runner>,
     pub config: Config,
 
-    pub path_to_toml: String,
+    pub path_to_toml: std::path::PathBuf,
 
     pub bare_config: crate::config::Cfg,
 
     pub process_handle: Option<subprocess::Popen>,
     pub process_reader: Option<std::io::BufReader<timeout_readwrite::TimeoutReader<std::fs::File>>>,
     pub current_log: String,
+    pub no_sleep: Option<nosleep::NoSleep>,
+
+    pub time_played: std::time::Duration,
+    pub time_started: Option<std::time::Instant>,
 }
 
 impl Game {
-    pub fn from_toml(path: &str, default: &str) -> Self {
-        crate::config::Cfg::from_toml(path).to_game(default, path.to_owned())
+    pub fn from_toml(
+        path: &std::path::PathBuf,
+        default: &std::path::PathBuf,
+        play_time_db: &HashMap<String, std::time::Duration>,
+    ) -> Self {
+        crate::config::Cfg::from_toml(path).to_game(default, path.to_owned(), play_time_db)
     }
 
     pub fn run(&mut self) {
@@ -132,6 +142,7 @@ pub struct Config {
     pub nv_prime: bool, // prime render offload for nvidia proprietary drivers => __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia __VK_LAYER_NV_optimus=NVIDIA_only
     pub vk_icd_loader: Option<String>, //  VK_DRIVER_FILES="path/to/loader.json" used to be VK_ICD_FILENAMES, but this is deprecated
     pub envs: HashMap<String, String>,
+    pub no_sleep_enabled: bool,
 }
 impl Config {
     fn new() -> Self {
@@ -249,6 +260,7 @@ impl DefaultCfg {
                 nv_prime: get_bool_or(general, "nv_prime", false),
                 vk_icd_loader: get_string(general, "vk_icd_loader"),
                 envs: get_hashmap(general, "env_variables"),
+                no_sleep_enabled: get_bool_or(general, "no_sleep_enabled", false),
             },
 
             native: crate::native::NativeRunner {

@@ -4,6 +4,7 @@ use crate::{
     games::{DummyRunner, Runner},
     mame::MameRunner,
     native::NativeRunner,
+    pcsx2::Pcsx2Runner,
     rpcs3::Rpcs3Runner,
     ryujinx::RyujinxRunner,
     wine::WineRunner,
@@ -142,218 +143,248 @@ impl CValue {
     }
 }
 
-pub fn get_config_order() -> Vec<(String, Vec<String>)> {
-    vec![
-        (
-            "metadata".to_owned(),
-            vec![
-                "name".to_owned(),
-                "box_art".to_owned(),
-                "release_year".to_owned(),
-                "path_to_game".to_owned(),
-                "runner".to_owned(),
-            ],
-        ),
-        (
-            "general".to_owned(),
-            vec![
-                "mangohud".to_owned(),
-                "vk_icd_loader".to_owned(),
-                "mesa_prime".to_owned(),
-                "nv_prime".to_owned(),
-                "env_variables".to_owned(),
-            ],
-        ),
-        ("native:native".to_owned(), vec!["native:args".to_owned()]),
-        (
-            "ryujinx:ryujinx".to_owned(),
-            vec!["ryujinx:path_to_ryujinx".to_owned()],
-        ),
-        (
-            "wine:wine".to_owned(),
-            vec![
-                "wine:path_to_wine".to_owned(),
-                "wine:wineprefix".to_owned(),
-                "wine:use_dxvk".to_owned(),
-                "wine:dxvk_path".to_owned(),
-                "wine:use_vkd3d".to_owned(),
-                "wine:vkd3d_path".to_owned(),
-                "wine:use_dxvk_nvapi".to_owned(),
-                "wine:dxvk_nvapi_path".to_owned(),
-                "wine:esync".to_owned(),
-                "wine:fsync".to_owned(),
-            ],
-        ),
-        (
-            "rpcs3:rpcs3".to_owned(),
-            vec!["rpcs3:path_to_rpcs3".to_owned()],
-        ),
-        (
-            "mame:mame".to_owned(),
-            vec![
-                "mame:path_to_mame".to_owned(),
-                "mame:machine_name".to_owned(),
-                "mame:fullscreen".to_owned(),
-            ],
-        ),
-    ]
-}
-
-pub fn get_default_config() -> HashMap<String, (String, CValue)> {
-    let mut out = HashMap::new();
-
-    out.insert(
-        "name".to_owned(),
-        ("name".to_owned(), CValue::Str(String::new())),
-    );
-    out.insert(
-        "box_art".to_owned(),
-        ("box art".to_owned(), CValue::PickFile(String::new())),
-    );
-    out.insert(
-        "release_year".to_owned(),
-        ("release year".to_owned(), CValue::Str(String::new())),
-    );
-    out.insert(
-        "path_to_game".to_owned(),
-        ("path to game".to_owned(), CValue::PickFile(String::new())),
-    );
-    out.insert(
-        "runner".to_owned(),
-        (
-            "runner".to_owned(),
-            CValue::OneOff(
-                crate::games::RUNNERS
-                    .iter()
-                    .map(|a| a.to_string())
-                    .collect(),
-                0,
+pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
+    once_cell::sync::Lazy::new(|| {
+        vec![
+            (
+                "launcher:launcher".to_owned(),
+                vec!["launcher:sgdb_api_key".to_owned()],
             ),
-        ),
-    );
-    out.insert(
-        "vk_icd_loader".to_owned(),
-        (
-            "path to vulkan icd loader".to_owned(),
-            CValue::PickFile(String::new()),
-        ),
-    );
-    out.insert(
-        "mangohud".to_owned(),
-        ("mangohud".to_owned(), CValue::Bool(false)),
-    );
-    out.insert(
-        "mesa_prime".to_owned(),
-        (
-            "use prime render offload (for amd gpus)".to_owned(),
-            CValue::Bool(false),
-        ),
-    );
-    out.insert(
-        "nv_prime".to_owned(),
-        (
-            "use prime render offload (for nvidia gpus)".to_owned(),
-            CValue::Bool(false),
-        ),
-    );
-    out.insert(
-        "env_variables".to_owned(),
-        (
-            "additional environment variables".to_owned(),
-            CValue::StrArr(Vec::new()),
-        ),
-    );
+            (
+                "metadata".to_owned(),
+                vec![
+                    "name".to_owned(),
+                    "box_art".to_owned(),
+                    "release_year".to_owned(),
+                    "path_to_game".to_owned(),
+                    "runner".to_owned(),
+                ],
+            ),
+            (
+                "general".to_owned(),
+                vec![
+                    "mangohud".to_owned(),
+                    "vk_icd_loader".to_owned(),
+                    "mesa_prime".to_owned(),
+                    "nv_prime".to_owned(),
+                    "env_variables".to_owned(),
+                    "no_sleep_enabled".to_owned(),
+                ],
+            ),
+            ("native:native".to_owned(), vec!["native:args".to_owned()]),
+            (
+                "ryujinx:ryujinx".to_owned(),
+                vec!["ryujinx:path_to_ryujinx".to_owned()],
+            ),
+            (
+                "wine:wine".to_owned(),
+                vec![
+                    "wine:path_to_wine".to_owned(),
+                    "wine:wineprefix".to_owned(),
+                    "wine:use_dxvk".to_owned(),
+                    "wine:dxvk_path".to_owned(),
+                    "wine:use_vkd3d".to_owned(),
+                    "wine:vkd3d_path".to_owned(),
+                    "wine:use_dxvk_nvapi".to_owned(),
+                    "wine:dxvk_nvapi_path".to_owned(),
+                    "wine:esync".to_owned(),
+                    "wine:fsync".to_owned(),
+                ],
+            ),
+            (
+                "rpcs3:rpcs3".to_owned(),
+                vec!["rpcs3:path_to_rpcs3".to_owned()],
+            ),
+            (
+                "mame:mame".to_owned(),
+                vec![
+                    "mame:path_to_mame".to_owned(),
+                    "mame:machine_name".to_owned(),
+                    "mame:fullscreen".to_owned(),
+                ],
+            ),
+            (
+                "pcsx2:pcsx2".to_owned(),
+                vec![
+                    "pcsx2:path_to_pcsx2".to_owned(),
+                    "pcsx2:fullscreen".to_owned(),
+                ],
+            ),
+        ]
+    });
 
-    out.insert(
-        "native:args".to_owned(),
-        (
-            "additional arguments".to_owned(),
-            CValue::StrArr(Vec::new()),
-        ),
-    );
+pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue)>> =
+    once_cell::sync::Lazy::new(|| {
+        let mut out = HashMap::new();
 
-    out.insert(
-        "ryujinx:path_to_ryujinx".to_owned(),
-        (
-            "path to ryujinx executable".to_owned(),
-            CValue::PickFile("ryujinx".to_owned()),
-        ),
-    );
+        out.insert(
+            "launcher:sgdb_api_key".to_owned(),
+            ("SteamGridDB API key".to_owned(), CValue::Str(String::new())),
+        );
+        out.insert(
+            "name".to_owned(),
+            ("name".to_owned(), CValue::Str(String::new())),
+        );
+        out.insert(
+            "box_art".to_owned(),
+            ("box art".to_owned(), CValue::PickFile(String::new())),
+        );
+        out.insert(
+            "release_year".to_owned(),
+            ("release year".to_owned(), CValue::Str(String::new())),
+        );
+        out.insert(
+            "path_to_game".to_owned(),
+            ("path to game".to_owned(), CValue::PickFile(String::new())),
+        );
+        out.insert(
+            "runner".to_owned(),
+            (
+                "runner".to_owned(),
+                CValue::OneOff(
+                    crate::games::RUNNERS
+                        .iter()
+                        .map(|a| a.to_string())
+                        .collect(),
+                    0,
+                ),
+            ),
+        );
+        out.insert(
+            "vk_icd_loader".to_owned(),
+            (
+                "path to vulkan icd loader".to_owned(),
+                CValue::PickFile(String::new()),
+            ),
+        );
+        out.insert(
+            "mangohud".to_owned(),
+            ("mangohud".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "mesa_prime".to_owned(),
+            (
+                "use prime render offload (for amd gpus)".to_owned(),
+                CValue::Bool(false),
+            ),
+        );
+        out.insert(
+            "nv_prime".to_owned(),
+            (
+                "use prime render offload (for nvidia gpus)".to_owned(),
+                CValue::Bool(false),
+            ),
+        );
+        out.insert(
+            "env_variables".to_owned(),
+            (
+                "additional environment variables".to_owned(),
+                CValue::StrArr(Vec::new()),
+            ),
+        );
+        out.insert(
+            "no_sleep_enabled".to_owned(),
+            ("disable sleep".to_owned(), CValue::Bool(false)),
+        );
 
-    out.insert(
-        "wine:path_to_wine".to_owned(),
-        (
-            "path to wine executable".to_owned(),
-            CValue::PickFile("wine".to_owned()),
-        ),
-    );
-    out.insert(
-        "wine:wineprefix".to_owned(),
-        (
-            "path to wineprefix".to_owned(),
-            CValue::PickFolder("".to_owned()),
-        ),
-    );
-    out.insert(
-        "wine:use_vkd3d".to_owned(),
-        ("enable vkd3d".to_owned(), CValue::Bool(false)),
-    );
-    out.insert(
-        "wine:vkd3d_path".to_owned(),
-        (
-            "path to vkd3d".to_owned(),
-            CValue::PickFolder("".to_owned()),
-        ),
-    );
-    out.insert(
-        "wine:use_dxvk".to_owned(),
-        ("enable dxvk".to_owned(), CValue::Bool(false)),
-    );
-    out.insert(
-        "wine:dxvk_path".to_owned(),
-        ("path to dxvk".to_owned(), CValue::PickFolder("".to_owned())),
-    );
-    out.insert(
-        "wine:use_dxvk_nvapi".to_owned(),
-        ("enable dxvk_nvapi".to_owned(), CValue::Bool(false)),
-    );
-    out.insert(
-        "wine:dxvk_nvapi_path".to_owned(),
-        (
-            "path to dxvk_nvapi".to_owned(),
-            CValue::PickFolder("".to_owned()),
-        ),
-    );
-    out.insert(
-        "wine:esync".to_owned(),
-        ("enable esync".to_owned(), CValue::Bool(false)),
-    );
-    out.insert(
-        "wine:fsync".to_owned(),
-        ("enable fsync".to_owned(), CValue::Bool(false)),
-    );
-    out.insert(
-        "rpcs3:path_to_rpcs3".to_owned(),
-        ("path to rpcs3".to_owned(), CValue::PickFile("".to_owned())),
-    );
-    out.insert(
-        "mame:path_to_mame".to_owned(),
-        ("path to mame".to_owned(), CValue::PickFile("".to_owned())),
-    );
-    out.insert(
-        "mame:machine_name".to_owned(),
-        ("machine name".to_owned(), CValue::Str("".to_owned())),
-    );
-    out.insert(
-        "mame:fullscreen".to_owned(),
-        ("fullscreen".to_owned(), CValue::Bool(false)),
-    );
+        out.insert(
+            "native:args".to_owned(),
+            (
+                "additional arguments".to_owned(),
+                CValue::StrArr(Vec::new()),
+            ),
+        );
 
-    out
-}
+        out.insert(
+            "ryujinx:path_to_ryujinx".to_owned(),
+            (
+                "path to ryujinx executable".to_owned(),
+                CValue::PickFile("ryujinx".to_owned()),
+            ),
+        );
 
-pub fn get_default_config_with_vals(path: &str) -> HashMap<String, (String, CValue)> {
-    let mut out = get_default_config();
+        out.insert(
+            "wine:path_to_wine".to_owned(),
+            (
+                "path to wine executable".to_owned(),
+                CValue::PickFile("wine".to_owned()),
+            ),
+        );
+        out.insert(
+            "wine:wineprefix".to_owned(),
+            (
+                "path to wineprefix".to_owned(),
+                CValue::PickFolder("".to_owned()),
+            ),
+        );
+        out.insert(
+            "wine:use_vkd3d".to_owned(),
+            ("enable vkd3d".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "wine:vkd3d_path".to_owned(),
+            (
+                "path to vkd3d".to_owned(),
+                CValue::PickFolder("".to_owned()),
+            ),
+        );
+        out.insert(
+            "wine:use_dxvk".to_owned(),
+            ("enable dxvk".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "wine:dxvk_path".to_owned(),
+            ("path to dxvk".to_owned(), CValue::PickFolder("".to_owned())),
+        );
+        out.insert(
+            "wine:use_dxvk_nvapi".to_owned(),
+            ("enable dxvk_nvapi".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "wine:dxvk_nvapi_path".to_owned(),
+            (
+                "path to dxvk_nvapi".to_owned(),
+                CValue::PickFolder("".to_owned()),
+            ),
+        );
+        out.insert(
+            "wine:esync".to_owned(),
+            ("enable esync".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "wine:fsync".to_owned(),
+            ("enable fsync".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "rpcs3:path_to_rpcs3".to_owned(),
+            ("path to rpcs3".to_owned(), CValue::PickFile("".to_owned())),
+        );
+        out.insert(
+            "mame:path_to_mame".to_owned(),
+            ("path to mame".to_owned(), CValue::PickFile("".to_owned())),
+        );
+        out.insert(
+            "mame:machine_name".to_owned(),
+            ("machine name".to_owned(), CValue::Str("".to_owned())),
+        );
+        out.insert(
+            "mame:fullscreen".to_owned(),
+            ("fullscreen".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "pcsx2:path_to_pcsx2".to_owned(),
+            ("path to pcsx2".to_owned(), CValue::PickFile("".to_owned())),
+        );
+        out.insert(
+            "pcsx2:fullscreen".to_owned(),
+            ("fullscreen".to_owned(), CValue::Bool(false)),
+        );
+
+        out
+    });
+
+pub fn get_default_config_with_vals(path: &std::path::Path) -> HashMap<String, (String, CValue)> {
+    let mut out = DEFAULT_CONFIG.clone();
     let cfg = Cfg::from_toml(path);
 
     for (k, v) in cfg.0 {
@@ -378,21 +409,18 @@ pub struct Cfg(pub HashMap<String, CValue>);
 impl Cfg {
     pub fn minimal() -> Self {
         let mut out = HashMap::new();
-        let def = get_default_config()
-            .get(&"runner".to_owned())
-            .unwrap()
-            .clone();
+        let def = DEFAULT_CONFIG.get(&"runner".to_owned()).unwrap().clone();
         out.insert("runner".to_owned(), def.1);
         Cfg(out)
     }
-    pub fn from_toml(path: &str) -> Self {
+    pub fn from_toml(path: &std::path::Path) -> Self {
         let toml = std::fs::read_to_string(path).unwrap_or(String::new());
         let value = toml::Value::from_str(&toml[..]).unwrap();
         let tot = value.as_table().unwrap();
 
         let mut out = HashMap::new();
 
-        let default = get_default_config();
+        let default = DEFAULT_CONFIG.clone();
 
         for (k, content) in tot.iter() {
             let prefix = if k == "metadata" || k == "general" {
@@ -419,11 +447,11 @@ impl Cfg {
     }
 
     pub fn to_toml(&self) -> String {
-        let order = get_config_order();
+        let order = CONFIG_ORDER.clone();
 
         let mut table = toml::map::Map::new();
 
-        for (name, content) in order {
+        for (name, content) in order.clone() {
             let mut itable = toml::map::Map::new();
             let name = name
                 .split(':')
@@ -454,7 +482,12 @@ impl Cfg {
         let Self(s) = self;
         s.get(key).unwrap_or(&default.get(key).unwrap().1).clone()
     }
-    pub fn to_game(self, default: &str, toml: String) -> crate::games::Game {
+    pub fn to_game(
+        self,
+        default: &std::path::Path,
+        toml: std::path::PathBuf,
+        play_time_db: &HashMap<String, std::time::Duration>,
+    ) -> crate::games::Game {
         let default = get_default_config_with_vals(default);
         let box_art = self.get_or_default("box_art", &default).as_string();
         let path = self.get_or_default("path_to_game", &default).as_string();
@@ -519,6 +552,13 @@ impl Cfg {
                     .as_string(),
                 fullscreen: self.get_or_default("mame:fullscreen", &default).as_bool(),
             }),
+            "pcsx2" => Box::new(Pcsx2Runner {
+                path: path.clone(),
+                path_to_pcsx2: self
+                    .get_or_default("pcsx2:path_to_pcsx2", &default)
+                    .as_string(),
+                fullscreen: self.get_or_default("pcsx2:fullscreen", &default).as_bool(),
+            }),
             _ => panic!("unknown runner"),
         };
 
@@ -530,27 +570,38 @@ impl Cfg {
             )
             .ok(),
             image,
-
-            path_to_game: path,
-
+            path_to_game: path.into(),
             runner_id,
-
             runner,
-
             config: crate::games::Config {
                 mangohud: self.get_or_default("mangohud", &default).as_bool(),
                 mesa_prime: self.get_or_default("mesa_prime", &default).as_bool(),
                 nv_prime: self.get_or_default("nv_prime", &default).as_bool(),
                 vk_icd_loader: opt(self.get_or_default("vk_icd_loader", &default).as_string()),
                 envs: self.get_or_default("env_variables", &default).as_hashmap(),
+                no_sleep_enabled: self.get_or_default("no_sleep_enabled", &default).as_bool(),
             },
 
             bare_config: self,
+            path_to_toml: toml.clone(),
 
-            path_to_toml: toml,
             process_handle: None,
             current_log: String::new(),
             process_reader: None,
+            no_sleep: None,
+
+            time_played: play_time_db
+                .get(
+                    &toml
+                        .file_name()
+                        .unwrap_or_default()
+                        .to_str()
+                        .unwrap_or_default()
+                        .to_owned(),
+                )
+                .unwrap_or(&std::time::Duration::from_secs(0))
+                .clone(),
+            time_started: None,
         }
     }
 }

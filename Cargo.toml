@@ -6,10 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-iced = {version="0.9.0", features=["glow", "image", "tokio"]} # so we use glow because iced doesn't seem to do that well with wgpu
+iced = {version="0.9.0", features=["glow", "image", "tokio", "default_system_font"]} # so we use glow because iced doesn't seem to do that well with wgpu
 iced_aw = {path="iced_aw", features=["icon_text", "tab_bar", "modal", "card"]}
 image = "0.24.5"
-toml = "0.5.10"
+toml = "0.7.3"
 log = "0.4.17"
 pretty_env_logger = "0.4.0"
 rand = "0.8.5"
@@ -21,3 +21,4 @@ steamgriddb_api = "0.3.1"
 tokio = {version = "1.28.0", features = ["full"]}
 reqwest = { version = "0.11.17", features = ["blocking"] }
 subprocess = "0.2.9"
+nosleep = {path="nosleep/nosleep"}

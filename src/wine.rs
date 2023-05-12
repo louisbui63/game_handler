@@ -250,6 +250,7 @@ impl WineRunner {
         if let Some(wineprefix) = &self.wineprefix {
             envs.insert("WINEPREFIX".to_owned(), wineprefix.to_owned());
         }
+        envs.insert("WINE_LARGE_ADDRESS_AWARE".to_owned(), "1".to_owned());
 
         Command {
             program: self.path_to_wine.clone(),
@@ -259,7 +260,10 @@ impl WineRunner {
                 self.path.clone()
             }],
             envs,
-            cwd: None,
+            cwd: std::path::PathBuf::try_from(self.path.clone())
+                .ok()
+                .map(|a| a.parent().map(|a| a.to_owned()))
+                .unwrap_or(None),
         }
     }
 }
