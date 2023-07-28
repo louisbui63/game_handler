@@ -2,9 +2,12 @@ use std::{collections::HashMap, str::FromStr};
 
 use toml::Value;
 
+#[cfg(unix)]
 pub const RUNNERS: [&str; 7] = [
     "dummy", "native", "wine", "ryujinx", "rpcs3", "mame", "pcsx2",
 ];
+#[cfg(windows)]
+pub const RUNNERS: [&str; 6] = ["dummy", "native", "ryujinx", "rpcs3", "mame", "pcsx2"];
 
 #[derive(Default, Debug)]
 pub struct Command {
@@ -55,10 +58,37 @@ impl Command {
                 .insert("__GLX_VENDOR_LIBRARY_NAME".to_owned(), "nvidia".to_owned());
             self.envs
                 .insert("__VK_LAYER_NV_optimus".to_owned(), "NVIDIA_only".to_owned());
+            if cfg.gamescope {
+                if let Ok(pci) = std::process::Command::new("sh")
+                    .args(&[
+                        "-c",
+                        "lspci -nn | grep -e VGA -e 3D | grep NVIDIA | cut -d ']' -f 3 | cut -c 3-",
+                    ])
+                    .output()
+                {
+                    let a = String::from_utf8_lossy(&pci.stdout).to_string();
+                    if !a.is_empty() {
+                        self.envs.insert("MESA__VK_DEVICE_SELECT".to_owned(), a);
+                    } else {
+                        log::warn!("couldn't find NVIDIA GPU. Starting gamescope with default GPU.")
+                    }
+                } else {
+                    log::warn!("couldn't find NVIDIA GPU. Starting gamescope with default GPU. Perhaps lspci isn't installed ?")
+                }
+            }
         }
         if let Some(path) = &cfg.vk_icd_loader {
             self.envs
                 .insert("VK_DRIVER_FILES".to_owned(), path.to_string());
+        }
+
+        if cfg.gamescope {
+            self.args.insert(0, self.program.clone());
+            self.args.insert(0, "--".to_owned());
+            let mut args = cfg.gamescope_params.clone();
+            args.append(&mut self.args);
+            self.args = args;
+            self.program = "gamescope".to_owned();
         }
 
         for (k, v) in cfg.envs.iter() {
@@ -97,7 +127,10 @@ pub struct Game {
     pub bare_config: crate::config::Cfg,
 
     pub process_handle: Option<subprocess::Popen>,
+    #[cfg(unix)]
     pub process_reader: Option<std::io::BufReader<timeout_readwrite::TimeoutReader<std::fs::File>>>,
+    #[cfg(windows)]
+    pub process_reader: Option<std::io::BufReader<std::fs::File>>,
     pub current_log: String,
     pub no_sleep: Option<nosleep::NoSleep>,
 
@@ -143,6 +176,8 @@ pub struct Config {
     pub vk_icd_loader: Option<String>, //  VK_DRIVER_FILES="path/to/loader.json" used to be VK_ICD_FILENAMES, but this is deprecated
     pub envs: HashMap<String, String>,
     pub no_sleep_enabled: bool,
+    pub gamescope: bool,
+    pub gamescope_params: Vec<String>,
 }
 impl Config {
     fn new() -> Self {
@@ -261,6 +296,8 @@ impl DefaultCfg {
                 vk_icd_loader: get_string(general, "vk_icd_loader"),
                 envs: get_hashmap(general, "env_variables"),
                 no_sleep_enabled: get_bool_or(general, "no_sleep_enabled", false),
+                gamescope: get_bool_or(general, "gamescope", false),
+                gamescope_params: get_string_vec(general, "gamescope_params"),
             },
 
             native: crate::native::NativeRunner {
@@ -285,6 +322,8 @@ impl DefaultCfg {
                 dxvk_nvapi_path: get_string(wine, "dxvk_nvapi_path"),
                 fsync: get_bool_or(wine, "fsync", false),
                 esync: get_bool_or(wine, "esync", false),
+                use_fsr: get_bool_or(wine, "use_fsr", false),
+                fsr_strength: get_string_or(wine, "fsr_strength", ""),
             },
 
             rpcs3: crate::rpcs3::Rpcs3Runner {

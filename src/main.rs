@@ -1,3 +1,4 @@
+mod catppuccin;
 mod config;
 mod games;
 mod mame;
@@ -208,7 +209,7 @@ impl Application for MainGUI {
 
         (
             MainGUI {
-                theme: Theme::Dark,
+                theme: Theme::Dark, //Theme::Custom(Box::new(catppuccin::frappe())),
                 games,
                 selected: None,
                 default_config: get_default_config_with_vals(
@@ -443,10 +444,13 @@ impl Application for MainGUI {
                     if let Some(ph) = &mut g.process_handle {
                         if let Some(out) = ph.stdout.take() {
                             g.process_reader = Some(std::io::BufReader::new(
+                                #[cfg(unix)]
                                 timeout_readwrite::TimeoutReader::new(
                                     out,
                                     std::time::Duration::from_millis(1),
                                 ),
+                                #[cfg(windows)]
+                                out,
                             ));
                         }
                         if let Some(reader) = &mut g.process_reader {

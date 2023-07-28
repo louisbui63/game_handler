@@ -15,6 +15,8 @@ pub struct WineRunner {
     pub dxvk_nvapi_path: Option<String>,
     pub fsync: bool,
     pub esync: bool,
+    pub use_fsr: bool,
+    pub fsr_strength: String,
 }
 impl WineRunner {
     fn complete(&self, gamefile: String, new: &toml::Value) -> Self {
@@ -98,31 +100,40 @@ impl WineRunner {
                 .unwrap()
                 .to_owned(),
         );
+
+        let is_32bit =
+            !std::path::Path::new(&(wineprefix.clone() + "/drive_c/windows/syswow64")[..]).is_dir();
         if self.use_vkd3d {
             let mut dlls = vec![];
-            for p in std::fs::read_dir(self.vkd3d_path.clone().unwrap() + "/x64").unwrap() {
-                let from = p.unwrap().path();
-                let to = wineprefix.clone()
-                    + "/drive_c/windows/system32/"
-                    + from.file_name().unwrap().to_str().unwrap();
-                let success = std::fs::copy(from.clone(), to.clone());
-                eprintln!(
-                    "copied {:?} to {to} as part of vkd3d. This resulted in {:?}",
-                    from, success
-                );
-                dlls.push(
-                    from.with_extension("")
-                        .file_name()
-                        .unwrap()
-                        .to_str()
-                        .unwrap()
-                        .to_owned(),
-                )
+            if !is_32bit {
+                for p in std::fs::read_dir(self.vkd3d_path.clone().unwrap() + "/x64").unwrap() {
+                    let from = p.unwrap().path();
+                    let to = wineprefix.clone()
+                        + "/drive_c/windows/system32/"
+                        + from.file_name().unwrap().to_str().unwrap();
+                    let success = std::fs::copy(from.clone(), to.clone());
+                    eprintln!(
+                        "copied {:?} to {to} as part of vkd3d. This resulted in {:?}",
+                        from, success
+                    );
+                    dlls.push(
+                        from.with_extension("")
+                            .file_name()
+                            .unwrap()
+                            .to_str()
+                            .unwrap()
+                            .to_owned(),
+                    )
+                }
             }
             for p in std::fs::read_dir(self.vkd3d_path.clone().unwrap() + "/x86").unwrap() {
                 let from = p.unwrap().path();
                 let to = wineprefix.clone()
-                    + "/drive_c/windows/syswow64/"
+                    + if !is_32bit {
+                        "/drive_c/windows/syswow64/"
+                    } else {
+                        "/drive_c/windows/system32/"
+                    }
                     + from.file_name().unwrap().to_str().unwrap();
                 let success = std::fs::copy(from.clone(), to.clone());
                 eprintln!(
@@ -145,29 +156,35 @@ impl WineRunner {
 
         if self.use_dxvk {
             let mut dlls = vec![];
-            for p in std::fs::read_dir(self.dxvk_path.clone().unwrap() + "/x64").unwrap() {
-                let from = p.unwrap().path();
-                let to = wineprefix.clone()
-                    + "/drive_c/windows/system32/"
-                    + from.file_name().unwrap().to_str().unwrap();
-                let success = std::fs::copy(from.clone(), to.clone());
-                eprintln!(
-                    "copied {:?} to {to} as part of vkd3d. This resulted in {:?}",
-                    from, success
-                );
-                dlls.push(
-                    from.with_extension("")
-                        .file_name()
-                        .unwrap()
-                        .to_str()
-                        .unwrap()
-                        .to_owned(),
-                )
+            if !is_32bit {
+                for p in std::fs::read_dir(self.dxvk_path.clone().unwrap() + "/x64").unwrap() {
+                    let from = p.unwrap().path();
+                    let to = wineprefix.clone()
+                        + "/drive_c/windows/system32/"
+                        + from.file_name().unwrap().to_str().unwrap();
+                    let success = std::fs::copy(from.clone(), to.clone());
+                    eprintln!(
+                        "copied {:?} to {to} as part of vkd3d. This resulted in {:?}",
+                        from, success
+                    );
+                    dlls.push(
+                        from.with_extension("")
+                            .file_name()
+                            .unwrap()
+                            .to_str()
+                            .unwrap()
+                            .to_owned(),
+                    )
+                }
             }
             for p in std::fs::read_dir(self.dxvk_path.clone().unwrap() + "/x32").unwrap() {
                 let from = p.unwrap().path();
                 let to = wineprefix.clone()
-                    + "/drive_c/windows/syswow64/"
+                    + if !is_32bit {
+                        "/drive_c/windows/syswow64/"
+                    } else {
+                        "/drive_c/windows/system32/"
+                    }
                     + from.file_name().unwrap().to_str().unwrap();
                 let success = std::fs::copy(from.clone(), to.clone());
                 eprintln!(
@@ -191,29 +208,36 @@ impl WineRunner {
         if self.use_dxvk_nvapi {
             let mut dlls = vec![];
             eprintln!("{:?}", self.dxvk_nvapi_path);
-            for p in std::fs::read_dir(self.dxvk_nvapi_path.clone().unwrap() + "/x64").unwrap() {
-                let from = p.unwrap().path();
-                let to = wineprefix.clone()
-                    + "/drive_c/windows/system32/"
-                    + from.file_name().unwrap().to_str().unwrap();
-                let success = std::fs::copy(from.clone(), to.clone());
-                eprintln!(
-                    "copied {:?} to {to} as part of vkd3d. This resulted in {:?}",
-                    from, success
-                );
-                dlls.push(
-                    from.with_extension("")
-                        .file_name()
-                        .unwrap()
-                        .to_str()
-                        .unwrap()
-                        .to_owned(),
-                )
+            if !is_32bit {
+                for p in std::fs::read_dir(self.dxvk_nvapi_path.clone().unwrap() + "/x64").unwrap()
+                {
+                    let from = p.unwrap().path();
+                    let to = wineprefix.clone()
+                        + "/drive_c/windows/system32/"
+                        + from.file_name().unwrap().to_str().unwrap();
+                    let success = std::fs::copy(from.clone(), to.clone());
+                    eprintln!(
+                        "copied {:?} to {to} as part of vkd3d. This resulted in {:?}",
+                        from, success
+                    );
+                    dlls.push(
+                        from.with_extension("")
+                            .file_name()
+                            .unwrap()
+                            .to_str()
+                            .unwrap()
+                            .to_owned(),
+                    )
+                }
             }
             for p in std::fs::read_dir(self.dxvk_nvapi_path.clone().unwrap() + "/x32").unwrap() {
                 let from = p.unwrap().path();
                 let to = wineprefix.clone()
-                    + "/drive_c/windows/syswow64/"
+                    + if !is_32bit {
+                        "/drive_c/windows/syswow64/"
+                    } else {
+                        "/drive_c/windows/system32/"
+                    }
                     + from.file_name().unwrap().to_str().unwrap();
                 let success = std::fs::copy(from.clone(), to.clone());
                 eprintln!(
@@ -249,6 +273,14 @@ impl WineRunner {
         }
         if let Some(wineprefix) = &self.wineprefix {
             envs.insert("WINEPREFIX".to_owned(), wineprefix.to_owned());
+        }
+        if self.use_fsr {
+            envs.insert("WINE_FULLSCREEN_FSR".to_owned(), "1".to_owned());
+            // might want to replace with WINE_FULLSCREEN_FSR_MODE
+            envs.insert(
+                "WINE_FULLSCREEN_FSR_STRENGTH".to_owned(),
+                self.fsr_strength.clone(),
+            );
         }
         envs.insert("WINE_LARGE_ADDRESS_AWARE".to_owned(), "1".to_owned());
 

@@ -1,7 +1,7 @@
 - [x] steamgriddb integration                        <-- The eponymous crate looks promising
 - [x] better steamgriddb search                      <-- use steam grid, choose the game and not its name from dropdown
 - [x] asynchronous downloads
-- [ ] asynchronous games stdio
+- [ ] asynchronous games stdio                       <-- tokio-stream is hell, use self-made "nonblocking" api via threads
 - [ ] support for animated webp grids                <-- See iced_gif 
 - [ ] cwd override
 - [ ] game sorting
@@ -16,7 +16,13 @@
 - [ ] \__GL_SHADER_DISK_CACHE
 
 Ongoing tasks:
-- More runners (Xemu, Cemu, pcsx2, quack, xenia, dolphin, libretro ...)
+- More runners
+  |- [ ] Xemu
+  |- [ ] Cemu
+  |- [x] pcsx2
+  |- [ ] xenia
+  |- [ ] dolphin
+  |- [ ] libretro
 
 Requires to wait third party:
 - Rewrite UI code with whatever the Cosmic shell ends up with

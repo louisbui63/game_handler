@@ -169,6 +169,8 @@ pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
                     "nv_prime".to_owned(),
                     "env_variables".to_owned(),
                     "no_sleep_enabled".to_owned(),
+                    "gamescope".to_owned(),
+                    "gamescope_params".to_owned(),
                 ],
             ),
             ("native:native".to_owned(), vec!["native:args".to_owned()]),
@@ -189,6 +191,8 @@ pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
                     "wine:dxvk_nvapi_path".to_owned(),
                     "wine:esync".to_owned(),
                     "wine:fsync".to_owned(),
+                    "wine:use_fsr".to_owned(),
+                    "wine:fsr_strength".to_owned(),
                 ],
             ),
             (
@@ -286,6 +290,14 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
             "no_sleep_enabled".to_owned(),
             ("disable sleep".to_owned(), CValue::Bool(false)),
         );
+        out.insert(
+            "gamescope".to_owned(),
+            ("enable gamescope".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "gamescope_params".to_owned(),
+            ("gamescope parameters".to_owned(), CValue::StrArr(vec![])),
+        );
 
         out.insert(
             "native:args".to_owned(),
@@ -354,6 +366,14 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
         out.insert(
             "wine:fsync".to_owned(),
             ("enable fsync".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "wine:use_fsr".to_owned(),
+            ("enable FSR upscaling".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "wine:fsr_strength".to_owned(),
+            ("FSR strength".to_owned(), CValue::Str("".to_owned())),
         );
         out.insert(
             "rpcs3:path_to_rpcs3".to_owned(),
@@ -535,6 +555,10 @@ impl Cfg {
                     .as_string()),
                 fsync: self.get_or_default("wine:esync", &default).as_bool(),
                 esync: self.get_or_default("wine:fsync", &default).as_bool(),
+                use_fsr: self.get_or_default("wine:use_fsr", &default).as_bool(),
+                fsr_strength: self
+                    .get_or_default("wine:fsr_strength", &default)
+                    .as_string(),
             }) as Box<dyn Runner>,
             "rpcs3" => Box::new(Rpcs3Runner {
                 path: path.clone(),
@@ -580,6 +604,10 @@ impl Cfg {
                 vk_icd_loader: opt(self.get_or_default("vk_icd_loader", &default).as_string()),
                 envs: self.get_or_default("env_variables", &default).as_hashmap(),
                 no_sleep_enabled: self.get_or_default("no_sleep_enabled", &default).as_bool(),
+                gamescope: self.get_or_default("gamescope", &default).as_bool(),
+                gamescope_params: self
+                    .get_or_default("gamescope_params", &default)
+                    .as_strarr(),
             },
 
             bare_config: self,
