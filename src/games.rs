@@ -1,6 +1,4 @@
-use std::{collections::HashMap, str::FromStr};
-
-use toml::Value;
+use std::collections::HashMap;
 
 #[cfg(unix)]
 pub const RUNNERS: [&str; 7] = [
