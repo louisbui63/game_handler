@@ -1,10 +1,13 @@
 use crate::config;
 use crate::Message;
+use crate::IMAGE_HEIGHT;
 use crate::{IMAGE_WIDTH, WIDGET_HEIGHT};
 use config::CValue;
+use iced::widget::image::FilterMethod;
+use iced::widget::image::TextureFilter;
 use iced::widget::{button, column, container, radio, row};
 use iced::{Element, Length, Theme};
-use iced_aw::tabs::TabBarStyles;
+use iced_aw::style::tab_bar::TabBarStyles;
 use iced_aw::{TabBar, TabLabel};
 
 struct ButtonStyle();
@@ -259,19 +262,29 @@ pub fn get_widget(
 }
 
 pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
-    let mut top_bar = TabBar::new(mg.grid_status as usize, |a| {
-        Message::SetGridStatus(a.try_into().unwrap())
-    })
-    .style(TabBarStyles::Blue)
-    .push(TabLabel::Text("Grid View".to_owned()))
-    .push(TabLabel::Text("Global Settings".to_owned()))
-    .push(TabLabel::Text("Add Game".to_owned()))
-    .width(Length::FillPortion(3));
+    let mut top_bar = TabBar::new(Message::SetGridStatus)
+        .style(TabBarStyles::Blue)
+        .push(
+            crate::GridStatus::GamesGrid,
+            TabLabel::Text("Grid View".to_owned()),
+        )
+        .push(
+            crate::GridStatus::GlobalSettings,
+            TabLabel::Text("Global Settings".to_owned()),
+        )
+        .push(
+            crate::GridStatus::AddGame,
+            TabLabel::Text("Add Game".to_owned()),
+        )
+        .width(Length::FillPortion(3));
 
     if let Some(_) = mg.selected {
         top_bar = top_bar
-            .push(TabLabel::Text("Game Settings".to_owned()))
-            .push(TabLabel::Text("Logs".to_owned()))
+            .push(
+                crate::GridStatus::GamesSettings,
+                TabLabel::Text("Game Settings".to_owned()),
+            )
+            .push(crate::GridStatus::Logs, TabLabel::Text("Logs".to_owned()))
             .width(Length::FillPortion(5));
     }
 
@@ -323,30 +336,43 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
         crate::GridStatus::GamesGrid => {
             let image_size = IMAGE_WIDTH as u16;
 
-            let mut grid: iced_aw::Grid<Message, _, _> =
+            let mut grid: iced_aw::Grid<Message, _> =
                 iced_aw::Grid::with_column_width(image_size as f32 + 20.);
             for (i, g) in mg.games.iter().enumerate() {
                 grid.insert::<Element<Message>>(
-                    iced::widget::button(
-                        iced::widget::column(vec![
-                            iced::widget::image(iced::widget::image::Handle::from_pixels(
-                                g.image.width(),
-                                g.image.height(),
-                                g.image.as_raw().clone(),
-                            ))
-                            .width(Length::Fixed(image_size as f32))
-                            .into(),
-                            iced::widget::text(g.name.clone()).into(),
-                        ])
-                        .align_items(iced::Alignment::Center),
+                    iced::widget::Container::new(
+                        iced::widget::button(
+                            iced::widget::column(vec![
+                                iced::widget::image(
+                                    iced::widget::image::Handle::from_pixels(
+                                        g.image.width(),
+                                        g.image.height(),
+                                        g.image.as_raw().clone(),
+                                    )
+                                    .set_filter(
+                                        TextureFilter {
+                                            min: FilterMethod::Nearest,
+                                            mag: FilterMethod::Nearest,
+                                        },
+                                    ),
+                                )
+                                // .width(Length::Fixed(image_size as f32))
+                                .height(Length::Fixed(IMAGE_HEIGHT as f32))
+                                .into(),
+                                iced::widget::text(g.name.clone()).into(),
+                            ])
+                            // .padding(iced::Padding::from(0.5))
+                            .align_items(iced::Alignment::Center),
+                        )
+                        .on_press(Message::GameSelected(i))
+                        .style(if Some(i) != mg.selected {
+                            iced::theme::Button::Custom(Box::new(ButtonStyle()))
+                        } else {
+                            iced::theme::Button::default()
+                        }), // .height(Length::Fixed(600.))
                     )
-                    .on_press(Message::GameSelected(i))
-                    .style(if Some(i) != mg.selected {
-                        iced::theme::Button::Custom(Box::new(ButtonStyle()))
-                    } else {
-                        iced::theme::Button::default()
-                    })
-                    .into(),
+                    .padding(iced::Padding::from(0))
+                    .into(), // .into(),
                 );
             }
             grid.into()
@@ -501,11 +527,13 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
     .width(Length::Fill);
 
     let content: Element<_> = if mg.steam_grid_db {
-        iced_aw::modal::Modal::new(true, content, || {
+        iced_aw::modal::Modal::new(
+            true,
+            content,
             column![
                 iced::widget::Space::with_height(Length::FillPortion(1)),
                 iced_aw::Card::new(iced::widget::text("Choose a banner"), {
-                    let mut grid: iced_aw::Grid<Message, _, _> =
+                    let mut grid: iced_aw::Grid<Message, _> =
                         iced_aw::Grid::with_column_width(IMAGE_WIDTH as f32 + 20.);
                     for (i, im) in mg.sgdb_images.iter().enumerate() {
                         grid.insert::<Element<Message>>(
@@ -560,18 +588,18 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
                 })
                 .height(Length::FillPortion(10)),
                 iced::widget::Space::with_height(Length::FillPortion(1)),
-            ]
-            .into()
-        })
+            ],
+        )
         .into()
     } else {
         content.into()
     };
-
     container(content)
         .width(Length::Fill)
         .height(Length::Fill)
         .center_x()
         .center_y()
         .into()
+
+    //content
 }

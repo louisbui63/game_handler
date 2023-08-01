@@ -53,7 +53,7 @@ fn main() -> iced::Result {
     })
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(usize)]
 pub enum GridStatus {
     GamesGrid,
@@ -164,6 +164,7 @@ pub enum Message {
         )>,
     ),
     SGDBAsyncFinalImageDownloadDone(Option<String>),
+    DoNothing,
 }
 
 impl Application for MainGUI {
@@ -225,7 +226,8 @@ impl Application for MainGUI {
                 sgdb_async_status: SGDBAsyncStatus::default(),
                 time_played_db,
             },
-            Command::none(),
+            iced::font::load(iced_aw::graphics::icons::AW_ICON_FONT_BYTES)
+                .map(|_| Message::DoNothing), // Command::none(),
         )
     }
 
@@ -608,6 +610,10 @@ impl Application for MainGUI {
                     self.steam_grid_db = false;
                     self.sgdb_images.clear();
                 }
+                Command::none()
+            }
+            Message::DoNothing => {
+                /*yep, you guessed it, we do nothing here*/
                 Command::none()
             }
         }
