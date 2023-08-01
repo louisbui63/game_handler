@@ -1,4 +1,3 @@
-mod catppuccin;
 mod config;
 mod games;
 mod mame;
