@@ -1,13 +1,17 @@
 use std::collections::HashMap;
 
+use crate::process_subscription::PSubInput;
+
 #[cfg(unix)]
-pub const RUNNERS: [&str; 7] = [
-    "dummy", "native", "wine", "ryujinx", "rpcs3", "mame", "pcsx2",
+pub const RUNNERS: [&str; 8] = [
+    "dummy", "native", "wine", "ryujinx", "rpcs3", "mame", "pcsx2", "yuzu",
 ];
 #[cfg(windows)]
-pub const RUNNERS: [&str; 6] = ["dummy", "native", "ryujinx", "rpcs3", "mame", "pcsx2"];
+pub const RUNNERS: [&str; 7] = [
+    "dummy", "native", "ryujinx", "rpcs3", "mame", "pcsx2", "yuzu",
+];
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Command {
     pub program: String,
     pub cwd: Option<std::path::PathBuf>,
@@ -16,7 +20,7 @@ pub struct Command {
 }
 
 impl Command {
-    fn run(&self) -> Option<subprocess::Popen> {
+    pub fn run(&self) -> Option<subprocess::Popen> {
         let cmd = subprocess::Exec::cmd(self.program.clone())
             .args(self.args.as_slice())
             .env_extend(self.envs.iter().collect::<Vec<_>>().as_slice())
@@ -41,14 +45,17 @@ impl Command {
     }
 
     fn apply_config(&mut self, cfg: &Config) {
+        #[cfg(unix)]
         if cfg.mangohud {
             self.args.insert(0, self.program.clone());
             self.args.insert(0, "--dlsym".to_owned()); // this solves compatibility issues with some openGL games
             self.program = "mangohud".to_owned();
         }
+        #[cfg(unix)]
         if cfg.mesa_prime {
             self.envs.insert("DRI_PRIME".to_owned(), "1".to_owned());
         }
+        #[cfg(unix)]
         if cfg.nv_prime {
             self.envs
                 .insert("__NV_PRIME_RENDER_OFFLOAD".to_owned(), "1".to_owned());
@@ -75,11 +82,13 @@ impl Command {
                 }
             }
         }
+        #[cfg(unix)]
         if let Some(path) = &cfg.vk_icd_loader {
             self.envs
                 .insert("VK_DRIVER_FILES".to_owned(), path.to_string());
         }
 
+        #[cfg(unix)]
         if cfg.gamescope {
             self.args.insert(0, self.program.clone());
             self.args.insert(0, "--".to_owned());
@@ -124,16 +133,15 @@ pub struct Game {
 
     pub bare_config: crate::config::Cfg,
 
-    pub process_handle: Option<subprocess::Popen>,
-    #[cfg(unix)]
-    pub process_reader: Option<std::io::BufReader<timeout_readwrite::TimeoutReader<std::fs::File>>>,
-    #[cfg(windows)]
-    pub process_reader: Option<std::io::BufReader<std::fs::File>>,
     pub current_log: String,
     pub no_sleep: Option<nosleep::NoSleep>,
 
     pub time_played: std::time::Duration,
     pub time_started: Option<std::time::Instant>,
+
+    pub is_running: bool,
+    pub cmd_to_run: Option<Command>,
+    pub psub_sender: Option<iced::futures::channel::mpsc::Sender<PSubInput>>,
 }
 
 impl Game {
@@ -148,16 +156,16 @@ impl Game {
     pub fn run(&mut self) {
         let mut cmd = self.runner.get_command();
         cmd.apply_config(&self.config);
-        // eprintln!("{:?}", cmd);
-        self.process_handle = cmd.run();
+        self.cmd_to_run = Some(cmd);
+        self.is_running = true;
     }
 
     pub fn run_subcommand(&mut self, a: String) {
         let cmd = self.runner.get_subcommand_command(a);
         if let Some(mut cmd) = cmd {
             cmd.apply_config(&self.config);
-            // eprintln!("{:?}", cmd);
-            self.process_handle = cmd.run();
+            self.cmd_to_run = Some(cmd);
+            self.is_running = true;
         }
     }
 
@@ -168,12 +176,18 @@ impl Game {
 
 #[derive(Default, Debug, Clone)]
 pub struct Config {
+    #[cfg(unix)]
     pub mangohud: bool,
+    #[cfg(unix)]
     pub mesa_prime: bool, // prime render offload for mesa drivers => DRI_PRIME=1
+    #[cfg(unix)]
     pub nv_prime: bool, // prime render offload for nvidia proprietary drivers => __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia __VK_LAYER_NV_optimus=NVIDIA_only
+    #[cfg(unix)]
     pub vk_icd_loader: Option<String>, //  VK_DRIVER_FILES="path/to/loader.json" used to be VK_ICD_FILENAMES, but this is deprecated
     pub envs: HashMap<String, String>,
     pub no_sleep_enabled: bool,
+    #[cfg(unix)]
     pub gamescope: bool,
+    #[cfg(unix)]
     pub gamescope_params: Vec<String>,
 }

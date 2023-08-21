@@ -1,5 +1,7 @@
 use std::{collections::HashMap, str::FromStr};
 
+#[cfg(unix)]
+use crate::wine::WineRunner;
 use crate::{
     games::{DummyRunner, Runner},
     mame::MameRunner,
@@ -7,7 +9,7 @@ use crate::{
     pcsx2::Pcsx2Runner,
     rpcs3::Rpcs3Runner,
     ryujinx::RyujinxRunner,
-    wine::WineRunner,
+    yuzu::YuzuRunner,
 };
 
 #[derive(Clone, Debug)]
@@ -163,13 +165,19 @@ pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
             (
                 "general".to_owned(),
                 vec![
+                    #[cfg(unix)]
                     "mangohud".to_owned(),
+                    #[cfg(unix)]
                     "vk_icd_loader".to_owned(),
+                    #[cfg(unix)]
                     "mesa_prime".to_owned(),
+                    #[cfg(unix)]
                     "nv_prime".to_owned(),
                     "env_variables".to_owned(),
                     "no_sleep_enabled".to_owned(),
+                    #[cfg(unix)]
                     "gamescope".to_owned(),
+                    #[cfg(unix)]
                     "gamescope_params".to_owned(),
                 ],
             ),
@@ -178,6 +186,7 @@ pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
                 "ryujinx:ryujinx".to_owned(),
                 vec!["ryujinx:path_to_ryujinx".to_owned()],
             ),
+            #[cfg(unix)]
             (
                 "wine:wine".to_owned(),
                 vec![
@@ -213,6 +222,10 @@ pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
                     "pcsx2:path_to_pcsx2".to_owned(),
                     "pcsx2:fullscreen".to_owned(),
                 ],
+            ),
+            (
+                "yuzu:yuzu".to_owned(),
+                vec!["yuzu:path_to_yuzu".to_owned(), "yuzu:fullscreen".to_owned()],
             ),
         ]
     });
@@ -254,6 +267,7 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
                 ),
             ),
         );
+        #[cfg(unix)]
         out.insert(
             "vk_icd_loader".to_owned(),
             (
@@ -261,10 +275,12 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
                 CValue::PickFile(String::new()),
             ),
         );
+        #[cfg(unix)]
         out.insert(
             "mangohud".to_owned(),
             ("mangohud".to_owned(), CValue::Bool(false)),
         );
+        #[cfg(unix)]
         out.insert(
             "mesa_prime".to_owned(),
             (
@@ -272,6 +288,7 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
                 CValue::Bool(false),
             ),
         );
+        #[cfg(unix)]
         out.insert(
             "nv_prime".to_owned(),
             (
@@ -290,10 +307,12 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
             "no_sleep_enabled".to_owned(),
             ("disable sleep".to_owned(), CValue::Bool(false)),
         );
+        #[cfg(unix)]
         out.insert(
             "gamescope".to_owned(),
             ("enable gamescope".to_owned(), CValue::Bool(false)),
         );
+        #[cfg(unix)]
         out.insert(
             "gamescope_params".to_owned(),
             ("gamescope parameters".to_owned(), CValue::StrArr(vec![])),
@@ -315,66 +334,69 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
             ),
         );
 
-        out.insert(
-            "wine:path_to_wine".to_owned(),
-            (
-                "path to wine executable".to_owned(),
-                CValue::PickFile("wine".to_owned()),
-            ),
-        );
-        out.insert(
-            "wine:wineprefix".to_owned(),
-            (
-                "path to wineprefix".to_owned(),
-                CValue::PickFolder("".to_owned()),
-            ),
-        );
-        out.insert(
-            "wine:use_vkd3d".to_owned(),
-            ("enable vkd3d".to_owned(), CValue::Bool(false)),
-        );
-        out.insert(
-            "wine:vkd3d_path".to_owned(),
-            (
-                "path to vkd3d".to_owned(),
-                CValue::PickFolder("".to_owned()),
-            ),
-        );
-        out.insert(
-            "wine:use_dxvk".to_owned(),
-            ("enable dxvk".to_owned(), CValue::Bool(false)),
-        );
-        out.insert(
-            "wine:dxvk_path".to_owned(),
-            ("path to dxvk".to_owned(), CValue::PickFolder("".to_owned())),
-        );
-        out.insert(
-            "wine:use_dxvk_nvapi".to_owned(),
-            ("enable dxvk_nvapi".to_owned(), CValue::Bool(false)),
-        );
-        out.insert(
-            "wine:dxvk_nvapi_path".to_owned(),
-            (
-                "path to dxvk_nvapi".to_owned(),
-                CValue::PickFolder("".to_owned()),
-            ),
-        );
-        out.insert(
-            "wine:esync".to_owned(),
-            ("enable esync".to_owned(), CValue::Bool(false)),
-        );
-        out.insert(
-            "wine:fsync".to_owned(),
-            ("enable fsync".to_owned(), CValue::Bool(false)),
-        );
-        out.insert(
-            "wine:use_fsr".to_owned(),
-            ("enable FSR upscaling".to_owned(), CValue::Bool(false)),
-        );
-        out.insert(
-            "wine:fsr_strength".to_owned(),
-            ("FSR strength".to_owned(), CValue::Str("".to_owned())),
-        );
+        #[cfg(unix)]
+        {
+            out.insert(
+                "wine:path_to_wine".to_owned(),
+                (
+                    "path to wine executable".to_owned(),
+                    CValue::PickFile("wine".to_owned()),
+                ),
+            );
+            out.insert(
+                "wine:wineprefix".to_owned(),
+                (
+                    "path to wineprefix".to_owned(),
+                    CValue::PickFolder("".to_owned()),
+                ),
+            );
+            out.insert(
+                "wine:use_vkd3d".to_owned(),
+                ("enable vkd3d".to_owned(), CValue::Bool(false)),
+            );
+            out.insert(
+                "wine:vkd3d_path".to_owned(),
+                (
+                    "path to vkd3d".to_owned(),
+                    CValue::PickFolder("".to_owned()),
+                ),
+            );
+            out.insert(
+                "wine:use_dxvk".to_owned(),
+                ("enable dxvk".to_owned(), CValue::Bool(false)),
+            );
+            out.insert(
+                "wine:dxvk_path".to_owned(),
+                ("path to dxvk".to_owned(), CValue::PickFolder("".to_owned())),
+            );
+            out.insert(
+                "wine:use_dxvk_nvapi".to_owned(),
+                ("enable dxvk_nvapi".to_owned(), CValue::Bool(false)),
+            );
+            out.insert(
+                "wine:dxvk_nvapi_path".to_owned(),
+                (
+                    "path to dxvk_nvapi".to_owned(),
+                    CValue::PickFolder("".to_owned()),
+                ),
+            );
+            out.insert(
+                "wine:esync".to_owned(),
+                ("enable esync".to_owned(), CValue::Bool(false)),
+            );
+            out.insert(
+                "wine:fsync".to_owned(),
+                ("enable fsync".to_owned(), CValue::Bool(false)),
+            );
+            out.insert(
+                "wine:use_fsr".to_owned(),
+                ("enable FSR upscaling".to_owned(), CValue::Bool(false)),
+            );
+            out.insert(
+                "wine:fsr_strength".to_owned(),
+                ("FSR strength".to_owned(), CValue::Str("".to_owned())),
+            );
+        }
         out.insert(
             "rpcs3:path_to_rpcs3".to_owned(),
             ("path to rpcs3".to_owned(), CValue::PickFile("".to_owned())),
@@ -397,6 +419,14 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
         );
         out.insert(
             "pcsx2:fullscreen".to_owned(),
+            ("fullscreen".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "yuzu:path_to_yuzu".to_owned(),
+            ("path to yuzu".to_owned(), CValue::PickFile("".to_owned())),
+        );
+        out.insert(
+            "yuzu:fullscreen".to_owned(),
             ("fullscreen".to_owned(), CValue::Bool(false)),
         );
 
@@ -539,6 +569,7 @@ impl Cfg {
                     .get_or_default("ryujinx:path_to_ryujinx", &default)
                     .as_string(),
             }) as Box<dyn Runner>,
+            #[cfg(unix)]
             "wine" => Box::new(WineRunner {
                 path: path.clone(),
                 path_to_wine: self
@@ -585,6 +616,13 @@ impl Cfg {
                     .as_string(),
                 fullscreen: self.get_or_default("pcsx2:fullscreen", &default).as_bool(),
             }),
+            "yuzu" => Box::new(YuzuRunner {
+                path: path.clone(),
+                path_to_yuzu: self
+                    .get_or_default("yuzu:path_to_yuzu", &default)
+                    .as_string(),
+                fullscreen: self.get_or_default("yuzu:fullscreen", &default).as_bool(),
+            }),
             _ => panic!("unknown runner"),
         };
 
@@ -600,13 +638,19 @@ impl Cfg {
             runner_id,
             runner,
             config: crate::games::Config {
+                #[cfg(unix)]
                 mangohud: self.get_or_default("mangohud", &default).as_bool(),
+                #[cfg(unix)]
                 mesa_prime: self.get_or_default("mesa_prime", &default).as_bool(),
+                #[cfg(unix)]
                 nv_prime: self.get_or_default("nv_prime", &default).as_bool(),
+                #[cfg(unix)]
                 vk_icd_loader: opt(self.get_or_default("vk_icd_loader", &default).as_string()),
                 envs: self.get_or_default("env_variables", &default).as_hashmap(),
                 no_sleep_enabled: self.get_or_default("no_sleep_enabled", &default).as_bool(),
+                #[cfg(unix)]
                 gamescope: self.get_or_default("gamescope", &default).as_bool(),
+                #[cfg(unix)]
                 gamescope_params: self
                     .get_or_default("gamescope_params", &default)
                     .as_strarr(),
@@ -615,9 +659,9 @@ impl Cfg {
             bare_config: self,
             path_to_toml: toml.clone(),
 
-            process_handle: None,
+            // process_handle: None,
             current_log: String::new(),
-            process_reader: None,
+            // process_reader: None,
             no_sleep: None,
 
             time_played: play_time_db
@@ -632,6 +676,10 @@ impl Cfg {
                 .unwrap_or(&std::time::Duration::from_secs(0))
                 .clone(),
             time_started: None,
+
+            is_running: false,
+            cmd_to_run: None,
+            psub_sender: None,
         }
     }
 }

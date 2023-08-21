@@ -7,20 +7,7 @@ pub struct Pcsx2Runner {
     pub path_to_pcsx2: String,
     pub fullscreen: bool,
 }
-impl Pcsx2Runner {
-    fn complete(&self, gamefile: String, new: &toml::Value) -> Self {
-        let mut out = self.clone();
 
-        out.path = gamefile;
-        if let Some(v) = new.get("path_to_pcsx2") {
-            if let Some(s) = v.as_str() {
-                out.path_to_pcsx2 = s.to_owned()
-            }
-        }
-
-        out
-    }
-}
 impl Runner for Pcsx2Runner {
     fn get_command(&self) -> Command {
         let mut args = vec![];

@@ -1,28 +1,33 @@
 use crate::games::*;
 
-/// runner for PS3 games via rpcs3
+/// runner for Nintendo Switch games via Ryujinx emulator
 #[derive(Debug, Clone)]
-pub struct Rpcs3Runner {
+pub struct YuzuRunner {
     pub path: String,
-    pub path_to_rpcs3: String,
+    pub path_to_yuzu: String,
+    pub fullscreen: bool,
 }
 
-impl Runner for Rpcs3Runner {
+impl Runner for YuzuRunner {
     fn get_command(&self) -> Command {
+        let mut args = vec!["-g".to_owned(), self.path.clone()];
+        if self.fullscreen {
+            args.insert(0, "-f".to_owned())
+        }
         Command {
-            program: self.path_to_rpcs3.clone(),
-            args: vec!["--no-gui".to_owned(), self.path.clone()],
+            program: self.path_to_yuzu.clone(),
+            args,
             envs: std::collections::HashMap::new(),
             cwd: None,
         }
     }
     fn get_subcommands(&self) -> Vec<String> {
-        return vec!["rpcs3".to_owned()];
+        return vec!["yuzu".to_owned()];
     }
     fn get_subcommand_command(&self, command: String) -> Option<Command> {
         match &command[..] {
-            "rpcs3" => Some(Command {
-                program: self.path_to_rpcs3.clone(),
+            "yuzu" => Some(Command {
+                program: self.path_to_yuzu.clone(),
                 args: vec![],
                 envs: std::collections::HashMap::new(),
                 cwd: None,

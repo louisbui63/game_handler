@@ -1,7 +1,7 @@
 use crate::games::*;
 
 /// runner for Windows applications via Wine compatibility layer
-/// provides access to vkd3d, dxvk and dxvk_nvapi
+/// provides access to vkd3d, dxvk and dxvk_nvapi, among other.
 #[derive(Debug, Clone)]
 pub struct WineRunner {
     pub path: String,
@@ -18,55 +18,7 @@ pub struct WineRunner {
     pub use_fsr: bool,
     pub fsr_strength: String,
 }
-impl WineRunner {
-    fn complete(&self, gamefile: String, new: &toml::Value) -> Self {
-        let mut out = self.clone();
 
-        out.path = gamefile;
-        if let Some(v) = new.get("path_to_wine") {
-            if let Some(s) = v.as_str() {
-                out.path_to_wine = s.to_owned()
-            }
-        }
-
-        if let Some(v) = new.get("use_vkd3d") {
-            out.use_vkd3d = v.as_bool().unwrap()
-        }
-
-        if out.use_vkd3d {
-            if let Some(v) = new.get("vkd3d_path") {
-                out.vkd3d_path = Some(v.as_str().unwrap().to_owned())
-            }
-        }
-        if let Some(v) = new.get("use_dxvk") {
-            out.use_dxvk = v.as_bool().unwrap()
-        }
-
-        if out.use_dxvk {
-            if let Some(v) = new.get("dxvk_path") {
-                out.dxvk_path = Some(v.as_str().unwrap().to_owned())
-            }
-        }
-        if let Some(v) = new.get("use_dxvk_nvapi") {
-            out.use_dxvk_nvapi = v.as_bool().unwrap()
-        }
-
-        if out.use_dxvk {
-            if let Some(v) = new.get("dxvk_nvapi_path") {
-                out.dxvk_nvapi_path = Some(v.as_str().unwrap().to_owned())
-            }
-        }
-
-        if let Some(v) = new.get("fsync") {
-            out.fsync = v.as_bool().unwrap();
-        }
-        if let Some(v) = new.get("esync") {
-            out.esync = v.as_bool().unwrap();
-        }
-
-        out
-    }
-}
 impl Runner for WineRunner {
     fn get_subcommands(&self) -> Vec<String> {
         vec![

@@ -3,18 +3,23 @@ mod games;
 mod mame;
 mod native;
 mod pcsx2;
+mod process_subscription;
 mod rpcs3;
 mod ryujinx;
+mod sort;
+mod theme;
 mod ui;
+#[cfg(unix)]
 mod wine;
+mod yuzu;
 
 use std::collections::HashMap;
-use std::io::{BufRead, Read};
 
 use config::{get_default_config_with_vals, CValue, Cfg};
 use games::Game;
 use iced::executor;
-use iced::{Application, Command, Element, Settings, Theme};
+use iced::futures::channel::mpsc::Sender;
+use iced::{Application, Command, Settings};
 
 pub const WIDGET_HEIGHT: u16 = 30;
 pub const IMAGE_WIDTH: u32 = 200;
@@ -46,6 +51,18 @@ fn main() -> iced::Result {
         panic!()
     }
 
+    log::info!("Loading theme");
+    let file = if let Ok(ct) = std::fs::read_to_string(DIRS.data_dir().join("theme.toml")) {
+        ct
+    } else {
+        String::new()
+    };
+    *crate::theme::CURRENT_THEME.lock().unwrap() = toml::from_str(&file[..])
+        .unwrap_or_else(|_| {
+            log::error!("Theme file \"%data_dir%/theme.toml\" not found or wrongly formatted : defaulting to embedded theme.");
+            toml::from_str(theme::EMBEDDED_THEME).unwrap()});
+
+    log::info!("UI starting");
     MainGUI::run(Settings {
         exit_on_close_request: true,
         ..Default::default()
@@ -78,7 +95,6 @@ impl std::convert::TryFrom<usize> for GridStatus {
 }
 
 pub struct MainGUI {
-    theme: Theme,
     games: Vec<Game>,
     selected: Option<usize>,
     grid_status: GridStatus,
@@ -94,6 +110,7 @@ pub struct MainGUI {
     sgdb_other_possibilities: Vec<steamgriddb_api::search::SearchResult>,
     sgdb_async_status: SGDBAsyncStatus,
     time_played_db: HashMap<String, std::time::Duration>,
+    sort_alg: sort::Sorts,
 }
 
 impl MainGUI {
@@ -133,7 +150,6 @@ pub enum ThemeType {
 
 #[derive(Debug, Clone)]
 pub enum Message {
-    ThemeChanged(ThemeType),
     GameSelected(usize),
     RunSelected,
     RunSubcommandSelected(String),
@@ -164,11 +180,14 @@ pub enum Message {
     ),
     SGDBAsyncFinalImageDownloadDone(Option<String>),
     DoNothing,
+    AddLogs(usize, String),
+    AddSender(usize, Sender<process_subscription::PSubInput>),
+    ProcessDied(usize),
 }
 
 impl Application for MainGUI {
     type Message = Message;
-    type Theme = Theme;
+    type Theme = crate::theme::Theme;
     type Executor = executor::Default;
     type Flags = ();
 
@@ -205,11 +224,11 @@ impl Application for MainGUI {
             })
             .collect();
         //alphabetic sort
-        games.sort_by_key(|a| a.name.clone());
+        // games.sort_unstable_by_key(|a| a.name.clone());
+        sort::sort_none_selected(&mut games, sort::Sorts::Name.get_fn());
 
         (
             MainGUI {
-                theme: Theme::Dark, //Theme::Custom(Box::new(catppuccin::frappe())),
                 games,
                 selected: None,
                 default_config: get_default_config_with_vals(
@@ -224,6 +243,7 @@ impl Application for MainGUI {
                 sgdb_other_possibilities: vec![],
                 sgdb_async_status: SGDBAsyncStatus::default(),
                 time_played_db,
+                sort_alg: sort::Sorts::Name,
             },
             iced::font::load(iced_aw::graphics::icons::AW_ICON_FONT_BYTES)
                 .map(|_| Message::DoNothing), // Command::none(),
@@ -236,21 +256,12 @@ impl Application for MainGUI {
 
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
-            Message::ThemeChanged(theme) => {
-                self.theme = match theme {
-                    ThemeType::Light => Theme::Light,
-                    ThemeType::Dark => Theme::Dark,
-                };
-
-                Command::none()
-            }
             Message::GameSelected(id) => {
                 self.selected = Some(id);
                 Command::none()
             }
             Message::RunSelected => {
                 if let Some(i) = self.selected {
-                    self.games[i].process_reader = None;
                     self.games[i].current_log.clear();
                     self.games[i].time_started = Some(std::time::Instant::now());
                     self.games[i].run();
@@ -371,6 +382,8 @@ impl Application for MainGUI {
                             .unwrap()
                             .write_all(to_write.as_bytes())
                             .unwrap();
+
+                        self.sort(self.sort_alg.get_fn());
                     }
                 }
                 if let Message::ApplyCloseSettings = message {
@@ -433,101 +446,32 @@ impl Application for MainGUI {
             }
             Message::RunSubcommandSelected(s) => {
                 if let Some(i) = self.selected {
-                    self.games[i].process_reader = None;
                     self.games[i].current_log.clear();
                     self.games[i].run_subcommand(s);
                 }
                 Command::none()
             }
             Message::MonotonicClock => {
-                let mut must_update_time_db = false;
                 for g in &mut self.games {
-                    if let Some(ph) = &mut g.process_handle {
-                        if let Some(out) = ph.stdout.take() {
-                            g.process_reader = Some(std::io::BufReader::new(
-                                #[cfg(unix)]
-                                timeout_readwrite::TimeoutReader::new(
-                                    out,
-                                    std::time::Duration::from_millis(1),
-                                ),
-                                #[cfg(windows)]
-                                out,
-                            ));
-                        }
-                        if let Some(reader) = &mut g.process_reader {
-                            for _ in 0..100 {
-                                let mut buf = Vec::with_capacity(512);
-                                if let Err(_) = reader.read_until(0x0A, &mut buf) {
-                                    break;
-                                }
-                                g.current_log
-                                    .push_str(&String::from_utf8_lossy(buf.as_slice())[..]);
-                            }
-                            if let Some(_) = ph.poll() {
-                                let mut buf = Vec::with_capacity(2048);
-                                if let Ok(_) = reader.read_to_end(&mut buf) {
-                                    g.current_log
-                                        .push_str(&String::from_utf8_lossy(buf.as_slice())[..]);
-                                }
-                                g.process_handle = None;
-                                g.process_reader = None;
-                                g.no_sleep = None;
-
-                                if let Some(when) = g.time_started {
-                                    g.time_played += std::time::Instant::now().duration_since(when);
-                                    self.time_played_db.insert(
-                                        g.path_to_toml
-                                            .file_name()
-                                            .unwrap_or_default()
-                                            .to_str()
-                                            .unwrap_or_default()
-                                            .to_owned(),
-                                        g.time_played,
-                                    );
-
-                                    must_update_time_db = true;
-                                }
-
-                                g.time_started = None;
+                    if g.is_running {
+                        if let Some(s) = &mut g.psub_sender {
+                            if let Err(e) = s.try_send(process_subscription::PSubInput::ReadInput) {
+                                log::error!("Couldn't send log request : {e}");
                             }
                         }
                     }
-                }
-                if must_update_time_db {
-                    self.update_db();
                 }
                 Command::none()
             }
             Message::KillSelected => {
                 if let Some(i) = self.selected {
-                    if let Some(when) = self.games[i].time_started {
-                        self.games[i].time_played += std::time::Instant::now().duration_since(when);
-                        self.time_played_db.insert(
-                            self.games[i]
-                                .path_to_toml
-                                .file_name()
-                                .unwrap_or_default()
-                                .to_str()
-                                .unwrap_or_default()
-                                .to_owned(),
-                            self.games[i].time_played,
-                        );
-                        self.update_db();
-                    }
-                    if let Some(ph) = &mut self.games[i].process_handle {
-                        ph.kill().unwrap();
-                    }
-                    if let Some(reader) = &mut self.games[i].process_reader {
-                        let mut buf = Vec::with_capacity(2048);
-                        if let Ok(_) = reader.read_to_end(&mut buf) {
-                            self.games[i]
-                                .current_log
-                                .push_str(&String::from_utf8_lossy(buf.as_slice())[..]);
+                    if let Some(sender) = &mut self.games[i].psub_sender {
+                        if let Err(e) = sender.try_send(process_subscription::PSubInput::Terminate)
+                        {
+                            log::error!("Unable to send signal to process subscription : {e}");
                         }
+                    } else {
                     }
-                    self.games[i].process_handle = None;
-                    self.games[i].process_reader = None;
-                    self.games[i].no_sleep = None;
                 }
                 Command::none()
             }
@@ -612,13 +556,41 @@ impl Application for MainGUI {
                 Command::none()
             }
             Message::DoNothing => {
-                /*yep, you guessed it, we do nothing here*/
+                //yep, you guessed it, we do nothing here
+                Command::none()
+            }
+            Message::AddLogs(i, logs) => {
+                self.games[i].current_log += &logs[..];
+                Command::none()
+            }
+            Message::AddSender(i, sender) => {
+                self.games[i].psub_sender = Some(sender);
+                Command::none()
+            }
+            Message::ProcessDied(i) => {
+                if let Some(when) = self.games[i].time_started {
+                    self.games[i].time_played += std::time::Instant::now().duration_since(when);
+                    self.time_played_db.insert(
+                        self.games[i]
+                            .path_to_toml
+                            .file_name()
+                            .unwrap_or_default()
+                            .to_str()
+                            .unwrap_or_default()
+                            .to_owned(),
+                        self.games[i].time_played,
+                    );
+                    self.update_db();
+                }
+                self.games[i].no_sleep = None;
+                self.games[i].psub_sender = None;
+                self.games[i].is_running = false;
                 Command::none()
             }
         }
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> theme::widget::Element<Message> {
         let MainGUI { .. } = self;
 
         ui::get_view_widget(self)
@@ -732,13 +704,35 @@ impl Application for MainGUI {
                 })
             }
         };
-        let mono_clock = iced::time::every(iced::time::Duration::from_millis(1000))
-            .map(|_| Message::MonotonicClock);
-        iced::subscription::Subscription::batch([sgdb_async, mono_clock])
+        let mono_clock = iced::time::every(iced::time::Duration::from_millis(
+            if let GridStatus::Logs = self.grid_status {
+                17
+            } else {
+                1000
+            },
+        ))
+        .map(|_| Message::MonotonicClock);
+        let mut running_processes = Vec::new();
+        for (i, g) in self.games.iter().enumerate() {
+            if g.is_running {
+                running_processes.push(process_subscription::get_psub(i, g.cmd_to_run.clone()).map(
+                    |input| match input {
+                        process_subscription::Event::Ready(i, sender) => {
+                            Message::AddSender(i, sender)
+                        }
+                        process_subscription::Event::GotLogs(i, logs) => Message::AddLogs(i, logs),
+                        process_subscription::Event::ProcessEnded(i) => Message::ProcessDied(i),
+                    },
+                ))
+            }
+        }
+        running_processes.push(mono_clock);
+        running_processes.push(sgdb_async);
+        iced::subscription::Subscription::batch(running_processes)
     }
 
-    fn theme(&self) -> Theme {
-        self.theme.clone()
+    fn theme(&self) -> theme::Theme {
+        theme::Theme
     }
 }
 

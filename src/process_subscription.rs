@@ -1,0 +1,123 @@
+use iced::futures::sink::SinkExt;
+use iced::{futures::channel::mpsc, subscription, Subscription};
+
+pub enum Event {
+    Ready(usize, mpsc::Sender<PSubInput>),
+    GotLogs(usize, String),
+    ProcessEnded(usize),
+}
+
+enum PSubState {
+    Starting,
+    Ready(mpsc::Receiver<PSubInput>),
+}
+
+#[derive(Debug)]
+pub enum PSubInput {
+    Terminate,
+    ReadInput,
+}
+
+pub fn get_psub(idx: usize, cmd_builder: Option<crate::games::Command>) -> Subscription<Event> {
+    subscription::channel(idx, 100, move |mut output| async move {
+        let mut state = PSubState::Starting;
+        let mut proc = cmd_builder.unwrap().run().unwrap();
+        proc.detach();
+        let proc_out = proc.stdout.take().unwrap();
+        let mut inner_proc_out = tokio::fs::File::from_std(proc_out);
+        loop {
+            match &mut state {
+                PSubState::Starting => {
+                    let (sender, receiver) = mpsc::channel(100);
+                    if let Err(e) = output.send(Event::Ready(idx, sender)).await {
+                        log::error!(
+                            "Couldn't send back the sender : {e}. This will most likely panic"
+                        );
+                    }
+                    state = PSubState::Ready(receiver);
+                }
+                PSubState::Ready(receiver) => {
+                    use tokio::io::AsyncRead;
+
+                    use iced::futures::StreamExt;
+                    let input = receiver.select_next_some().await;
+                    match input {
+                        PSubInput::Terminate => {
+                            loop {
+                                let mut ubuf: [u8; 1024] = [0; 1024];
+                                let mut buf = tokio::io::ReadBuf::new(&mut ubuf);
+                                let status = std::pin::Pin::new(&mut inner_proc_out).poll_read(
+                                    &mut std::task::Context::from_waker(&noop_waker::noop_waker()),
+                                    &mut buf,
+                                );
+                                match status {
+                                    std::task::Poll::Ready(Ok(())) => {
+                                        let ct = buf.filled();
+                                        if ct.len() == 0 {
+                                            break;
+                                        }
+                                        if let Err(e) = output
+                                            .send(Event::GotLogs(
+                                                idx,
+                                                String::from_utf8_lossy(ct).to_string(),
+                                            ))
+                                            .await
+                                        {
+                                            log::error!("Unable to send data from psub : {e}");
+                                        }
+                                    }
+                                    std::task::Poll::Ready(Err(e)) => {
+                                        log::error!("unmanaged process read error : {e}");
+                                        break;
+                                    }
+                                    std::task::Poll::Pending => break,
+                                }
+                            }
+                            if let Err(e) = proc.kill() {
+                                log::error!("Unable to kill process : {e}");
+                            }
+                            if let Err(e) = output.send(Event::ProcessEnded(idx)).await {
+                                log::error!("Unable to send data from psub : {e}");
+                            }
+                        }
+                        PSubInput::ReadInput => {
+                            let mut logs = String::new();
+                            loop {
+                                let mut ubuf: [u8; 1024] = [0; 1024];
+                                let mut buf = tokio::io::ReadBuf::new(&mut ubuf);
+                                let status = std::pin::Pin::new(&mut inner_proc_out).poll_read(
+                                    &mut std::task::Context::from_waker(&noop_waker::noop_waker()),
+                                    &mut buf,
+                                );
+                                match status {
+                                    std::task::Poll::Ready(Ok(())) => {
+                                        let ct = buf.filled();
+                                        if ct.len() == 0 {
+                                            break;
+                                        }
+                                        logs += &String::from_utf8_lossy(ct);
+                                    }
+                                    std::task::Poll::Ready(Err(e)) => {
+                                        log::error!("unmanaged process read error : {e}");
+                                        break;
+                                    }
+                                    std::task::Poll::Pending => break,
+                                }
+                            }
+                            if !logs.is_empty() {
+                                if let Err(e) = output.send(Event::GotLogs(idx, logs)).await {
+                                    log::error!("Unable to send data from psub : {e}");
+                                }
+                            }
+                            if let Some(_exit_status) = proc.poll() {
+                                if let Err(e) = output.send(Event::ProcessEnded(idx)).await {
+                                    log::error!("Unable to send data from psub : {e}");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    })
+}
