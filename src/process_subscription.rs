@@ -1,6 +1,10 @@
 use iced::futures::sink::SinkExt;
 use iced::{futures::channel::mpsc, subscription, Subscription};
 
+use tokio::io::AsyncBufReadExt;
+use tokio_stream::wrappers::SplitStream;
+use tokio_stream::StreamExt;
+
 pub enum Event {
     Ready(usize, mpsc::Sender<PSubInput>),
     GotLogs(usize, String),
@@ -22,9 +26,22 @@ pub fn get_psub(idx: usize, cmd_builder: Option<crate::games::Command>) -> Subsc
     subscription::channel(idx, 100, move |mut output| async move {
         let mut state = PSubState::Starting;
         let mut proc = cmd_builder.unwrap().run().unwrap();
-        proc.detach();
-        let proc_out = proc.stdout.take().unwrap();
-        let mut inner_proc_out = tokio::fs::File::from_std(proc_out);
+        let stdout = proc.stdout.take().unwrap();
+        let stderr = proc.stderr.take().unwrap();
+
+        // Wrap them up and merge them.
+        let stdout = SplitStream::new(tokio::io::BufReader::new(stdout).split('\n' as u8));
+        let stderr = SplitStream::new(tokio::io::BufReader::new(stderr).split('\n' as u8));
+        let merged = StreamExt::merge(stdout, stderr).map(|a| {
+            a.map(|b| {
+                let mut o = std::collections::VecDeque::from(b);
+                o.push_back('\n' as u8);
+                o
+            })
+        });
+        // let proc_out = proc.stdout.take().unwrap();
+        // let mut inner_proc_out = tokio::fs::File::from_std(proc_out);
+        let mut inner_proc_out = tokio_util::io::StreamReader::new(merged);
         loop {
             match &mut state {
                 PSubState::Starting => {
@@ -73,7 +90,7 @@ pub fn get_psub(idx: usize, cmd_builder: Option<crate::games::Command>) -> Subsc
                                     std::task::Poll::Pending => break,
                                 }
                             }
-                            if let Err(e) = proc.kill() {
+                            if let Err(e) = proc.kill().await {
                                 log::error!("Unable to kill process : {e}");
                             }
                             if let Err(e) = output.send(Event::ProcessEnded(idx)).await {
@@ -109,7 +126,7 @@ pub fn get_psub(idx: usize, cmd_builder: Option<crate::games::Command>) -> Subsc
                                     log::error!("Unable to send data from psub : {e}");
                                 }
                             }
-                            if let Some(_exit_status) = proc.poll() {
+                            if let Ok(Some(_exit_status)) = proc.try_wait() {
                                 if let Err(e) = output.send(Event::ProcessEnded(idx)).await {
                                     log::error!("Unable to send data from psub : {e}");
                                 }

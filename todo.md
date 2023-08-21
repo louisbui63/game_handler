@@ -22,7 +22,7 @@
 - [ ] better file dialog (restart at last position) <-- further resarch suggest
       that we would have to write our own
 - [x] remove unix features from w64 builds
-- [ ] replace subprocess with tokio processes (should fix process death issues)
+- [x] replace subprocess with tokio processes (should fix process death issues)
 - [ ] replace nosleep-nix dbus dependency with zbus
 
 Ongoing tasks:

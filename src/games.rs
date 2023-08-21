@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, process::Stdio};
 
 use crate::process_subscription::PSubInput;
 
@@ -20,26 +20,40 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn run(&self) -> Option<subprocess::Popen> {
-        let cmd = subprocess::Exec::cmd(self.program.clone())
-            .args(self.args.as_slice())
-            .env_extend(self.envs.iter().collect::<Vec<_>>().as_slice())
-            .stdout(subprocess::Redirection::Pipe)
-            .stderr(subprocess::Redirection::Merge)
-            .cwd(if let Some(cwd) = self.cwd.clone() {
+    pub fn run(&self) -> Option<tokio::process::Child> {
+        let mut cmd = tokio::process::Command::new(self.program.clone());
+        cmd.args(self.args.as_slice())
+            .envs(self.envs.clone())
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            // .stdout(subprocess::Redirection::Pipe)
+            // .stderr(subprocess::Redirection::Merge)
+            .current_dir(if let Some(cwd) = self.cwd.clone() {
                 cwd
             } else {
                 std::env::current_dir().unwrap()
-            })
-            .detached();
+            });
+        // .detached();
+        // let cmd = subprocess::Exec::cmd(self.program.clone())
+        //     .args(self.args.as_slice())
+        //     .env_extend(self.envs.iter().collect::<Vec<_>>().as_slice())
+        //     .stdout(subprocess::Redirection::Pipe)
+        //     .stderr(subprocess::Redirection::Merge)
+        //     .cwd(if let Some(cwd) = self.cwd.clone() {
+        //         cwd
+        //     } else {
+        //         std::env::current_dir().unwrap()
+        //     })
+        //     .detached();
         log::info!("running command : {:?}", cmd);
-        let out = cmd.popen();
+        let out = cmd.spawn();
 
         if let Err(e) = out {
             log::error!("error {e} while running command");
             None
         } else {
-            let out = out.unwrap();
+            let mut out = out.unwrap();
             Some(out)
         }
     }
