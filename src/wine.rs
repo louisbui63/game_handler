@@ -17,6 +17,7 @@ pub struct WineRunner {
     pub esync: bool,
     pub use_fsr: bool,
     pub fsr_strength: String,
+    pub args: Vec<String>,
 }
 
 impl Runner for WineRunner {
@@ -238,11 +239,13 @@ impl WineRunner {
 
         Command {
             program: self.path_to_wine.clone(),
-            args: vec![if let Some(a) = command_override {
-                a
+            args: if let Some(a) = command_override {
+                vec![a]
             } else {
-                self.path.clone()
-            }],
+                let mut a = vec![self.path.clone()];
+                a.extend(self.args.clone());
+                a
+            },
             envs,
             cwd: std::path::PathBuf::try_from(self.path.clone())
                 .ok()

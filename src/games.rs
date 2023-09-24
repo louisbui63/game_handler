@@ -156,6 +156,8 @@ pub struct Game {
     pub is_running: bool,
     pub cmd_to_run: Option<Command>,
     pub psub_sender: Option<iced::futures::channel::mpsc::Sender<PSubInput>>,
+
+    pub managed_processes: Vec<sysinfo::Pid>,
 }
 
 impl Game {

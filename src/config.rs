@@ -202,6 +202,7 @@ pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
                     "wine:fsync".to_owned(),
                     "wine:use_fsr".to_owned(),
                     "wine:fsr_strength".to_owned(),
+                    "wine:args".to_owned(),
                 ],
             ),
             (
@@ -336,6 +337,10 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
 
         #[cfg(unix)]
         {
+            out.insert(
+                "wine:args".to_owned(),
+                ("arguments".to_owned(), CValue::StrArr(Vec::new())),
+            );
             out.insert(
                 "wine:path_to_wine".to_owned(),
                 (
@@ -592,6 +597,7 @@ impl Cfg {
                 fsr_strength: self
                     .get_or_default("wine:fsr_strength", &default)
                     .as_string(),
+                args: self.get_or_default("wine:args", &default).as_strarr(),
             }) as Box<dyn Runner>,
             "rpcs3" => Box::new(Rpcs3Runner {
                 path: path.clone(),
@@ -680,6 +686,8 @@ impl Cfg {
             is_running: false,
             cmd_to_run: None,
             psub_sender: None,
+
+            managed_processes: Vec::new(),
         }
     }
 }

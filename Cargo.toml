@@ -26,3 +26,4 @@ nosleep = {path="nosleep/nosleep"}
 noop-waker = "0.1.0"
 lazy_static = "1.4.0"
 serde = "1.0"
+sysinfo = "0.29.10"

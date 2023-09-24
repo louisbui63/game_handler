@@ -183,6 +183,7 @@ pub enum Message {
     AddLogs(usize, String),
     AddSender(usize, Sender<process_subscription::PSubInput>),
     ProcessDied(usize),
+    ProcessWatcherClock,
 }
 
 impl Application for MainGUI {
@@ -463,6 +464,7 @@ impl Application for MainGUI {
                 }
                 Command::none()
             }
+            Message::ProcessWatcherClock => Command::none(),
             Message::KillSelected => {
                 if let Some(i) = self.selected {
                     if let Some(sender) = &mut self.games[i].psub_sender {

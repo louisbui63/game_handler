@@ -24,6 +24,7 @@
 - [x] remove unix features from w64 builds
 - [x] replace subprocess with tokio processes (should fix process death issues)
 - [ ] replace nosleep-nix dbus dependency with zbus
+- [ ] manage subprocesses
 
 Ongoing tasks:
 
