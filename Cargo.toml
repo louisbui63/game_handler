@@ -6,8 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-iced = {path="iced", features=["image", "tokio", "advanced"]}
-iced_aw = {path="iced_aw", features=["icon_text", "tab_bar", "modal", "card"]}
+# iced = {path="iced", features=["image", "tokio", "advanced"]}
+iced = {git = "https://github.com/louisbui63/iced", features=["image", "tokio", "advanced"]}
+# iced_aw = {path="iced_aw", features=["icon_text", "tab_bar", "modal", "card"]}
+iced_aw = {git = "https://github.com/louisbui63/iced_aw", features=["icon_text", "tab_bar", "modal", "card"]}
 image = "0.24.5"
 toml = "0.7.6"
 log = "0.4.17"
@@ -22,7 +24,8 @@ tokio = {version = "1.32.0", features = ["full"]}
 tokio-stream = {version = "0.1.14", features = ["io-util"]}
 tokio-util = {version = "0.7.8", features = ["io"]}
 reqwest = { version = "0.11.17", features = ["blocking"] }
-nosleep = {path="nosleep/nosleep"}
+#nosleep = {path="nosleep/nosleep"}
+nosleep = {git = "https://github.com/louisbui63/nosleep"}
 noop-waker = "0.1.0"
 lazy_static = "1.4.0"
 serde = "1.0"
