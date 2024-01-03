@@ -1,4 +1,6 @@
+mod citra;
 mod config;
+mod date;
 mod games;
 mod mame;
 mod native;
@@ -110,6 +112,7 @@ pub struct MainGUI {
     sgdb_other_possibilities: Vec<steamgriddb_api::search::SearchResult>,
     sgdb_async_status: SGDBAsyncStatus,
     time_played_db: HashMap<String, std::time::Duration>,
+    time_played_ty_db: HashMap<String, std::time::Duration>,
     sort_alg: sort::Sorts,
 }
 
@@ -118,6 +121,17 @@ impl MainGUI {
         if let Ok(mut file) = std::fs::File::create(DIRS.data_dir().join("times.toml")) {
             let mut db = HashMap::new();
             self.time_played_db
+                .iter()
+                .map(|(k, v)| db.insert(k, v.as_secs() as i64))
+                .last();
+            let _ = std::io::Write::write_fmt(
+                &mut file,
+                format_args!("{}", toml::to_string(&db).unwrap_or("42".to_owned())),
+            );
+        }
+        if let Ok(mut file) = std::fs::File::create(DIRS.data_dir().join("times_ty.toml")) {
+            let mut db = HashMap::new();
+            self.time_played_ty_db
                 .iter()
                 .map(|(k, v)| db.insert(k, v.as_secs() as i64))
                 .last();
@@ -194,6 +208,7 @@ impl Application for MainGUI {
 
     fn new(_flags: Self::Flags) -> (Self, Command<Message>) {
         let mut time_played_db = HashMap::new();
+        let mut time_played_ty_db = HashMap::new();
         std::fs::read_to_string(DIRS.data_dir().join("times.toml"))
             .unwrap_or_else(|e| {
                 log::error!("couldn't read playtime database : {e}");
@@ -214,6 +229,27 @@ impl Application for MainGUI {
                 time_played_db.insert(k, std::time::Duration::from_secs(i.try_into().unwrap_or(0)))
             })
             .last(); // here we just consume the iter such that our map does something
+        std::fs::read_to_string(DIRS.data_dir().join("times_ty.toml"))
+            .unwrap_or_else(|e| {
+                log::error!("couldn't read playtime database : {e}");
+                String::new()
+            })
+            .parse::<toml::Table>()
+            .unwrap_or_else(|e| {
+                log::error!("couldn't read playtime database : {e}");
+                toml::Table::new()
+            })
+            .try_into::<HashMap<String, i64>>()
+            .unwrap_or_else(|e| {
+                log::error!("couldn't convert playtime database : {e}");
+                HashMap::new()
+            })
+            .drain()
+            .map(|(k, i)| {
+                time_played_ty_db
+                    .insert(k, std::time::Duration::from_secs(i.try_into().unwrap_or(0)))
+            })
+            .last(); // here we just consume the iter such that our map does something
         let mut games: Vec<_> = std::fs::read_dir(DIRS.config_dir().join("games"))
             .unwrap()
             .map(|a| {
@@ -221,6 +257,7 @@ impl Application for MainGUI {
                     &a.unwrap().path(),
                     &DIRS.config_dir().join("settings.toml"),
                     &time_played_db,
+                    &time_played_ty_db,
                 )
             })
             .collect();
@@ -244,6 +281,7 @@ impl Application for MainGUI {
                 sgdb_other_possibilities: vec![],
                 sgdb_async_status: SGDBAsyncStatus::default(),
                 time_played_db,
+                time_played_ty_db,
                 sort_alg: sort::Sorts::Name,
             },
             iced::font::load(iced_aw::graphics::icons::AW_ICON_FONT_BYTES)
@@ -320,6 +358,7 @@ impl Application for MainGUI {
                                 &DIRS.config_dir().join("settings.toml"),
                                 path.clone(),
                                 &self.time_played_db,
+                                &self.time_played_ty_db,
                             );
 
                         let to_write = self.temp_settings.as_ref().unwrap().to_toml();
@@ -352,6 +391,7 @@ impl Application for MainGUI {
                                 &DIRS.config_dir().join("settings.toml"),
                                 self.games[i].path_to_toml.clone(),
                                 &self.time_played_db,
+                                &self.time_played_ty_db,
                             );
                         }
                     }
@@ -375,6 +415,7 @@ impl Application for MainGUI {
                             &DIRS.config_dir().join("settings.toml"),
                             path.clone(),
                             &self.time_played_db,
+                            &self.time_played_ty_db,
                         ));
 
                         let to_write = self.temp_settings.as_ref().unwrap().to_toml();

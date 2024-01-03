@@ -1,0 +1,11 @@
+[submodule "iced"]
+  path = iced
+  url = https://github.com/louisbui63/iced
+
+[submodule "iced_aw"]
+  path = iced_aw
+  url = https://github.com/louisbui63/iced_aw
+
+[submodule "nosleep"]
+  path = nosleep
+  url = https://github.com/louisbui63/nosleep

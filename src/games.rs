@@ -3,12 +3,12 @@ use std::{collections::HashMap, process::Stdio};
 use crate::process_subscription::PSubInput;
 
 #[cfg(unix)]
-pub const RUNNERS: [&str; 8] = [
-    "dummy", "native", "wine", "ryujinx", "rpcs3", "mame", "pcsx2", "yuzu",
+pub const RUNNERS: [&str; 9] = [
+    "dummy", "native", "wine", "ryujinx", "rpcs3", "mame", "pcsx2", "yuzu", "citra",
 ];
 #[cfg(windows)]
-pub const RUNNERS: [&str; 7] = [
-    "dummy", "native", "ryujinx", "rpcs3", "mame", "pcsx2", "yuzu",
+pub const RUNNERS: [&str; 8] = [
+    "dummy", "native", "ryujinx", "rpcs3", "mame", "pcsx2", "yuzu", "citra",
 ];
 
 #[derive(Default, Debug, Clone)]
@@ -53,7 +53,7 @@ impl Command {
             log::error!("error {e} while running command");
             None
         } else {
-            let mut out = out.unwrap();
+            let out = out.unwrap();
             Some(out)
         }
     }
@@ -152,6 +152,7 @@ pub struct Game {
 
     pub time_played: std::time::Duration,
     pub time_started: Option<std::time::Instant>,
+    pub time_played_this_year: std::time::Duration,
 
     pub is_running: bool,
     pub cmd_to_run: Option<Command>,
@@ -165,8 +166,14 @@ impl Game {
         path: &std::path::PathBuf,
         default: &std::path::PathBuf,
         play_time_db: &HashMap<String, std::time::Duration>,
+        play_time_ty_db: &HashMap<String, std::time::Duration>,
     ) -> Self {
-        crate::config::Cfg::from_toml(path).to_game(default, path.to_owned(), play_time_db)
+        crate::config::Cfg::from_toml(path).to_game(
+            default,
+            path.to_owned(),
+            play_time_db,
+            play_time_ty_db,
+        )
     }
 
     pub fn run(&mut self) {

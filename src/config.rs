@@ -3,6 +3,7 @@ use std::{collections::HashMap, str::FromStr};
 #[cfg(unix)]
 use crate::wine::WineRunner;
 use crate::{
+    citra::CitraRunner,
     games::{DummyRunner, Runner},
     mame::MameRunner,
     native::NativeRunner,
@@ -228,6 +229,13 @@ pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
                 "yuzu:yuzu".to_owned(),
                 vec!["yuzu:path_to_yuzu".to_owned(), "yuzu:fullscreen".to_owned()],
             ),
+            (
+                "citra:citra".to_owned(),
+                vec![
+                    "citra:path_to_citra".to_owned(),
+                    "citra:fullscreen".to_owned(),
+                ],
+            ),
         ]
     });
 
@@ -434,6 +442,14 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
             "yuzu:fullscreen".to_owned(),
             ("fullscreen".to_owned(), CValue::Bool(false)),
         );
+        out.insert(
+            "citra:path_to_citra".to_owned(),
+            ("path to citra".to_owned(), CValue::PickFile("".to_owned())),
+        );
+        out.insert(
+            "citra:fullscreen".to_owned(),
+            ("fullscreen".to_owned(), CValue::Bool(false)),
+        );
 
         out
     });
@@ -542,6 +558,7 @@ impl Cfg {
         default: &std::path::Path,
         toml: std::path::PathBuf,
         play_time_db: &HashMap<String, std::time::Duration>,
+        play_time_ty_db: &HashMap<String, std::time::Duration>,
     ) -> crate::games::Game {
         let default = get_default_config_with_vals(default);
         let box_art = self.get_or_default("box_art", &default).as_string();
@@ -629,6 +646,13 @@ impl Cfg {
                     .as_string(),
                 fullscreen: self.get_or_default("yuzu:fullscreen", &default).as_bool(),
             }),
+            "citra" => Box::new(CitraRunner {
+                path: path.clone(),
+                path_to_citra: self
+                    .get_or_default("citra:path_to_citra", &default)
+                    .as_string(),
+                fullscreen: self.get_or_default("citra:fullscreen", &default).as_bool(),
+            }),
             _ => panic!("unknown runner"),
         };
 
@@ -671,6 +695,17 @@ impl Cfg {
             no_sleep: None,
 
             time_played: play_time_db
+                .get(
+                    &toml
+                        .file_name()
+                        .unwrap_or_default()
+                        .to_str()
+                        .unwrap_or_default()
+                        .to_owned(),
+                )
+                .unwrap_or(&std::time::Duration::from_secs(0))
+                .clone(),
+            time_played_this_year: play_time_ty_db
                 .get(
                     &toml
                         .file_name()
