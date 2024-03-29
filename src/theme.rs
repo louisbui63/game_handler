@@ -1,4 +1,6 @@
 pub mod widget {
+    use iced::advanced::text::highlighter::PlainText;
+
     use crate::theme::Theme;
 
     pub type Renderer = iced::Renderer<Theme>;
@@ -6,7 +8,9 @@ pub mod widget {
     // pub type Container<'a, Message> = iced::widget::Container<'a, Message, Renderer>;
     // pub type Button<'a, Message> = iced::widget::Button<'a, Message, Renderer>;
     pub type Row<'a, Message> = iced::widget::Row<'a, Message, Renderer>;
-    pub type Column<'a, Message> = iced::widget::Column<'a, Message, Renderer>;
+    // pub type Column<'a, Message> = iced::widget::Column<'a, Message, Renderer>;
+    // pub type Scrollable<'a, Message> = iced::widget::Scrollable<'a, Message, Renderer>;
+    pub type TextEditor<'a, Message> = iced::widget::TextEditor<'a, PlainText, Message, Renderer>;
 }
 #[derive(serde::Serialize, serde::Deserialize, Default)]
 pub struct CurrentTheme {
@@ -42,6 +46,13 @@ pub struct CurrentTheme {
     pick_list_active: pick_list::Appearance,
     pick_list_hovered: pick_list::Appearance,
     overlay_menu: overlay::menu::Appearance,
+    text_editor_active: text_editor::Appearance,
+    text_editor_focused: text_editor::Appearance,
+    text_editor_disabled: text_editor::Appearance,
+    text_editor_placeholder_color: iced::Color,
+    text_editor_value_color: iced::Color,
+    text_editor_disabled_color: iced::Color,
+    text_editor_selection_color: iced::Color,
 }
 
 use std::sync::Mutex;
@@ -55,9 +66,43 @@ pub struct Theme;
 
 use iced::{
     application, overlay,
-    widget::{button, container, pick_list, radio, scrollable, text, text_input, toggler},
+    widget::{
+        button, container, pick_list, radio, scrollable, text, text_editor, text_input, toggler,
+    },
 };
 use iced_aw::{modal, style::card, tab_bar};
+
+impl text_editor::StyleSheet for Theme {
+    type Style = ();
+
+    fn active(&self, _style: &Self::Style) -> text_editor::Appearance {
+        CURRENT_THEME.lock().unwrap().text_editor_active
+    }
+
+    fn focused(&self, _style: &Self::Style) -> text_editor::Appearance {
+        CURRENT_THEME.lock().unwrap().text_editor_focused
+    }
+
+    fn placeholder_color(&self, _style: &Self::Style) -> iced::Color {
+        CURRENT_THEME.lock().unwrap().text_editor_placeholder_color
+    }
+
+    fn value_color(&self, _style: &Self::Style) -> iced::Color {
+        CURRENT_THEME.lock().unwrap().text_editor_value_color
+    }
+
+    fn disabled_color(&self, _style: &Self::Style) -> iced::Color {
+        CURRENT_THEME.lock().unwrap().text_editor_disabled_color
+    }
+
+    fn selection_color(&self, _style: &Self::Style) -> iced::Color {
+        CURRENT_THEME.lock().unwrap().text_editor_selection_color
+    }
+
+    fn disabled(&self, _style: &Self::Style) -> text_editor::Appearance {
+        CURRENT_THEME.lock().unwrap().text_editor_disabled
+    }
+}
 
 impl application::StyleSheet for Theme {
     type Style = ();
@@ -186,7 +231,7 @@ impl radio::StyleSheet for Theme {
 impl tab_bar::StyleSheet for Theme {
     type Style = ();
 
-    fn active(&self, _style: Self::Style, is_active: bool) -> tab_bar::Appearance {
+    fn active(&self, _style: &Self::Style, is_active: bool) -> tab_bar::Appearance {
         if is_active {
             CURRENT_THEME.lock().unwrap().tab_bar_active_active
         } else {
@@ -194,7 +239,7 @@ impl tab_bar::StyleSheet for Theme {
         }
     }
 
-    fn hovered(&self, _style: Self::Style, is_active: bool) -> tab_bar::Appearance {
+    fn hovered(&self, _style: &Self::Style, is_active: bool) -> tab_bar::Appearance {
         if is_active {
             CURRENT_THEME.lock().unwrap().tab_bar_hovered_active
         } else {
@@ -238,7 +283,7 @@ impl text_input::StyleSheet for Theme {
 impl card::StyleSheet for Theme {
     type Style = ();
 
-    fn active(&self, _style: Self::Style) -> iced_aw::card::Appearance {
+    fn active(&self, _style: &Self::Style) -> iced_aw::card::Appearance {
         CURRENT_THEME.lock().unwrap().card_active
     }
 }
@@ -246,7 +291,7 @@ impl card::StyleSheet for Theme {
 impl modal::StyleSheet for Theme {
     type Style = ();
 
-    fn active(&self, _style: Self::Style) -> iced_aw::style::modal::Appearance {
+    fn active(&self, _style: &Self::Style) -> iced_aw::style::modal::Appearance {
         CURRENT_THEME.lock().unwrap().modal_active
     }
 }
@@ -493,6 +538,12 @@ a = 0.0
 [tab_bar_active_active]
 border_width = 0.0
 tab_label_border_width = 0.0
+icon_border_radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
 
 [tab_bar_active_active.tab_label_background.Color]
 r = 1.0
@@ -521,6 +572,12 @@ a = 1.0
 [tab_bar_active_inactive]
 border_width = 0.0
 tab_label_border_width = 0.0
+icon_border_radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
 
 [tab_bar_active_inactive.tab_label_background.Color]
 r = 0.74
@@ -549,6 +606,12 @@ a = 1.0
 [tab_bar_hovered_active]
 border_width = 0.0
 tab_label_border_width = 0.0
+icon_border_radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
 
 [tab_bar_hovered_active.tab_label_background.Color]
 r = 0.91
@@ -577,6 +640,12 @@ a = 1.0
 [tab_bar_hovered_inactive]
 border_width = 0.0
 tab_label_border_width = 0.0
+icon_border_radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
 
 [tab_bar_hovered_inactive.tab_label_background.Color]
 r = 0.61
@@ -1042,5 +1111,92 @@ a = 1.0
 r = 1.0
 g = 0.67
 b = 1.0
+a = 1.0
+
+[text_editor_active]
+border_radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+border_width = 1.0
+
+[text_editor_active.background.Color]
+r = 0.19
+g = 0.20
+b = 0.27
+a = 1.0
+
+[text_editor_active.border_color]
+r = 0.73
+g = 0.76
+b = 0.90
+a = 1.0
+
+[text_editor_focused]
+border_radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+border_width = 1.0
+
+[text_editor_focused.background.Color]
+r = 0.19
+g = 0.20
+b = 0.27
+a = 1.0
+
+[text_editor_focused.border_color]
+r = 0.73
+g = 0.76
+b = 0.90
+a = 1.0
+
+[text_editor_disabled]
+border_radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+border_width = 1.0
+
+[text_editor_disabled.background.Color]
+r = 0.19
+g = 0.20
+b = 0.27
+a = 1.0
+
+[text_editor_disabled.border_color]
+r = 0.73
+g = 0.76
+b = 0.90
+a = 1.0
+
+[text_editor_placeholder_color]
+r = 0.73
+g = 0.76
+b = 0.90
+a = 1.0
+
+[text_editor_value_color]
+r = 0.73
+g = 0.76
+b = 0.90
+a = 1.0
+
+[text_editor_disabled_color]
+r = 0.73
+g = 0.76
+b = 0.90
+a = 1.0
+
+[text_editor_selection_color]
+r = 0.76
+g = 0.60
+b = 0.76
 a = 1.0
 "#;

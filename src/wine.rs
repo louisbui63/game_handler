@@ -65,9 +65,10 @@ impl WineRunner {
                         + "/drive_c/windows/system32/"
                         + from.file_name().unwrap().to_str().unwrap();
                     let success = std::fs::copy(from.clone(), to.clone());
-                    eprintln!(
+                    log::info!(
                         "copied {:?} to {to} as part of vkd3d. This resulted in {:?}",
-                        from, success
+                        from,
+                        success
                     );
                     dlls.push(
                         from.with_extension("")
@@ -89,9 +90,10 @@ impl WineRunner {
                     }
                     + from.file_name().unwrap().to_str().unwrap();
                 let success = std::fs::copy(from.clone(), to.clone());
-                eprintln!(
+                log::info!(
                     "copied {:?} to {to} as part of vkd3d. This resulted in {:?}",
-                    from, success
+                    from,
+                    success
                 );
                 dlls.push(
                     from.with_extension("")
@@ -116,9 +118,10 @@ impl WineRunner {
                         + "/drive_c/windows/system32/"
                         + from.file_name().unwrap().to_str().unwrap();
                     let success = std::fs::copy(from.clone(), to.clone());
-                    eprintln!(
+                    log::info!(
                         "copied {:?} to {to} as part of vkd3d. This resulted in {:?}",
-                        from, success
+                        from,
+                        success
                     );
                     dlls.push(
                         from.with_extension("")
@@ -140,9 +143,10 @@ impl WineRunner {
                     }
                     + from.file_name().unwrap().to_str().unwrap();
                 let success = std::fs::copy(from.clone(), to.clone());
-                eprintln!(
+                log::info!(
                     "copied {:?} to {to} as part of vkd3d. This resulted in {:?}",
-                    from, success
+                    from,
+                    success
                 );
                 dlls.push(
                     from.with_extension("")
@@ -160,7 +164,7 @@ impl WineRunner {
 
         if self.use_dxvk_nvapi {
             let mut dlls = vec![];
-            eprintln!("{:?}", self.dxvk_nvapi_path);
+            log::info!("{:?}", self.dxvk_nvapi_path);
             if !is_32bit {
                 for p in std::fs::read_dir(self.dxvk_nvapi_path.clone().unwrap() + "/x64").unwrap()
                 {
@@ -169,9 +173,10 @@ impl WineRunner {
                         + "/drive_c/windows/system32/"
                         + from.file_name().unwrap().to_str().unwrap();
                     let success = std::fs::copy(from.clone(), to.clone());
-                    eprintln!(
+                    log::info!(
                         "copied {:?} to {to} as part of vkd3d. This resulted in {:?}",
-                        from, success
+                        from,
+                        success
                     );
                     dlls.push(
                         from.with_extension("")
@@ -193,9 +198,10 @@ impl WineRunner {
                     }
                     + from.file_name().unwrap().to_str().unwrap();
                 let success = std::fs::copy(from.clone(), to.clone());
-                eprintln!(
+                log::info!(
                     "copied {:?} to {to} as part of vkd3d. This resulted in {:?}",
-                    from, success
+                    from,
+                    success
                 );
                 dlls.push(
                     from.with_extension("")

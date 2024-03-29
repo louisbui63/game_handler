@@ -9,10 +9,8 @@ mod process_subscription;
 mod rpcs3;
 mod ryujinx;
 mod sort;
-mod steam;
 mod theme;
 mod ui;
-mod vita3k;
 #[cfg(unix)]
 mod wine;
 mod yuzu;
@@ -40,11 +38,9 @@ fn main() -> iced::Result {
     flexi_logger::Logger::try_with_env_or_str("info")
         .unwrap()
         .log_to_file(
-            flexi_logger::FileSpec::try_from(DIRS.data_dir().join("log")).unwrap_or(
-                flexi_logger::FileSpec::default()
-                    .directory(DIRS.data_dir().join("logs"))
-                    .basename("log"),
-            ),
+            flexi_logger::FileSpec::try_from(DIRS.data_dir().join(log)).unwrap_or(
+                .directory(DIRS.data_dir().join("logs"))
+                .basename("log"))),
         )
         .duplicate_to_stdout(flexi_logger::Duplicate::Error)
         .start()
@@ -662,8 +658,6 @@ impl Application for MainGUI {
             Message::ProcessDied(i) => {
                 if let Some(when) = self.games[i].time_started {
                     self.games[i].time_played += std::time::Instant::now().duration_since(when);
-                    self.games[i].time_played_this_year +=
-                        std::time::Instant::now().duration_since(when);
                     self.time_played_db.insert(
                         self.games[i]
                             .path_to_toml
@@ -746,7 +740,7 @@ impl Application for MainGUI {
                                 },
                             )),
                         ).await
-                        .unwrap_or_else(|_| vec![]);
+                        .unwrap();
 
                         (Message::SGDBAsyncImageQueryStart(images), id)
                     }

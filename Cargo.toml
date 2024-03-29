@@ -8,12 +8,12 @@ edition = "2021"
 [dependencies]
 iced = {path="iced", features=["image", "tokio", "advanced"]}
 # iced = {git = "https://github.com/louisbui63/iced", features=["image", "tokio", "advanced"]}
-iced_aw = {path="iced_aw", features=["icon_text", "tab_bar", "modal", "card"]}
+iced_aw = {path="iced_aw", features=["tab_bar", "modal", "card", "old_grid","icons"]}
 # iced_aw = {git = "https://github.com/louisbui63/iced_aw", features=["icon_text", "tab_bar", "modal", "card"]}
 image = "0.24.5"
 toml = "0.7.6"
 log = "0.4.17"
-pretty_env_logger = "0.4.0"
+flexi_logger = "0.27.3"
 rand = "0.8.5"
 rfd = { version="0.11.4", default-features = false, features = ["xdg-portal"] }
 directories = "5.0.0"

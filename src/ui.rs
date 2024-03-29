@@ -4,10 +4,14 @@ use crate::Message;
 use crate::IMAGE_HEIGHT;
 use crate::{IMAGE_WIDTH, WIDGET_HEIGHT};
 use config::CValue;
+use iced::alignment::Horizontal;
 use iced::widget::image::FilterMethod;
-use iced::widget::image::TextureFilter;
+use iced::widget::text;
 use iced::widget::{button, column, container, row};
+use iced::Alignment;
 use iced::{Length, Theme};
+use iced_aw::NerdIcon;
+use iced_aw::NERD_FONT;
 use iced_aw::{TabBar, TabLabel};
 
 struct ButtonStyle();
@@ -34,40 +38,39 @@ pub fn get_widget(
     uses_default: bool,
 ) -> crate::theme::widget::Row<'_, Message> {
     match v {
-        config::CValue::Str(s) => crate::theme::widget::Row::with_children(vec![
-            iced::widget::text(label)
-                .width(Length::FillPortion(3))
-                .into(),
+        config::CValue::Str(s) => row![
+            iced::widget::text(label).width(Length::FillPortion(3)),
+            // .into(),
             iced::widget::text_input("", s)
                 .on_input({
                     let k1 = k.clone();
                     move |a| Message::SettingChanged(k1.clone(), CValue::Str(a))
                 })
-                .width(Length::FillPortion(3))
-                .into(),
+                .width(Length::FillPortion(3)),
+            // .into(),
             iced::widget::toggler(None, uses_default, move |a| {
                 Message::SettingDefaultChanged(k.clone(), a)
             })
-            .width(Length::FillPortion(1))
-            .into(),
-        ])
+            .width(Length::FillPortion(1)),
+            // .into(),
+        ]
         .height(Length::Fixed(WIDGET_HEIGHT as f32)),
-        config::CValue::Bool(b) => crate::theme::widget::Row::with_children(vec![
-            iced::widget::text(label)
-                .width(Length::FillPortion(3))
-                .into(),
-            iced::widget::toggler(None, *b, {
+        config::CValue::Bool(b) => row![
+            iced::widget::text(label).width(Length::FillPortion(3)),
+            // .into(),
+            iced::widget::Container::new(iced::widget::toggler(None, *b, {
                 let k1 = k.clone();
                 move |a| Message::SettingChanged(k1.clone(), CValue::Bool(a))
-            })
-            .width(Length::FillPortion(3))
-            .into(),
+            }))
+            .width(Length::FillPortion(1)),
+            iced::widget::Space::with_width(Length::FillPortion(2)),
+            // .into(),
             iced::widget::toggler(None, uses_default, move |a| {
                 Message::SettingDefaultChanged(k.clone(), a)
             })
-            .width(Length::FillPortion(1))
-            .into(),
-        ])
+            .width(Length::FillPortion(1)),
+            // .into(),
+        ]
         .height(Length::Fixed(WIDGET_HEIGHT as f32)),
         config::CValue::StrArr(arr) => {
             // log::error!("Feature StrArr() not yet available in config display");
@@ -166,18 +169,17 @@ pub fn get_widget(
                         .into(),
                 );
             }
-            let col = crate::theme::widget::Column::with_children(col);
-            crate::theme::widget::Row::with_children(vec![
-                iced::widget::text(label)
-                    .width(Length::FillPortion(3))
-                    .into(),
-                col.width(Length::FillPortion(3)).into(),
+            let col = iced::widget::Column::with_children(col);
+            row![
+                iced::widget::text(label).width(Length::FillPortion(3)),
+                // .into(),
+                col.width(Length::FillPortion(3)), //.into(),
                 iced::widget::toggler(None, uses_default, move |a| {
                     Message::SettingDefaultChanged(k.clone(), a)
                 })
-                .width(Length::FillPortion(1))
-                .into(),
-            ])
+                .width(Length::FillPortion(1)),
+                // .into(),
+            ]
             .into()
         }
         config::CValue::OneOff(l, s) => row![
@@ -206,59 +208,63 @@ pub fn get_widget(
         ]
         .height(Length::Fixed(WIDGET_HEIGHT as f32)),
         config::CValue::PickFile(s) => if k == "box_art" {
-            crate::theme::widget::Row::with_children(vec![
-                iced::widget::text(label)
-                    .width(Length::FillPortion(6))
-                    .into(),
+            row![
+                iced::widget::text(label).width(Length::FillPortion(6)),
+                // .into(),
                 iced::widget::text_input("", s)
                     .on_input({
                         let k1 = k.clone();
                         move |a| Message::SettingChanged(k1.clone(), CValue::PickFile(a))
                     })
-                    .width(Length::FillPortion(4))
-                    .into(),
-                iced::widget::button(iced_aw::native::icon_text::IconText::new(
-                    iced_aw::graphics::icons::Icon::Grid,
-                ))
+                    .width(Length::FillPortion(4)),
+                // .into(),
+                iced::widget::button(
+                    text("󰕰")
+                        .font(NERD_FONT)
+                        .horizontal_alignment(Horizontal::Center)
+                )
                 .on_press(Message::SteamGridDb)
-                .width(Length::FillPortion(1))
-                .into(),
-                iced::widget::button(iced_aw::native::icon_text::IconText::new(
-                    iced_aw::graphics::icons::Icon::Folder,
-                ))
+                .width(Length::FillPortion(1)),
+                // .into(),
+                iced::widget::button(
+                    text("󰉋")
+                        .font(NERD_FONT)
+                        .horizontal_alignment(Horizontal::Center)
+                )
                 .on_press(Message::FilePicker(k.clone()))
-                .width(Length::FillPortion(1))
-                .into(),
+                .width(Length::FillPortion(1)),
+                // .into(),
                 iced::widget::toggler(None, uses_default, move |a| {
                     Message::SettingDefaultChanged(k.clone(), a)
                 })
-                .width(Length::FillPortion(2))
-                .into(),
-            ])
+                .width(Length::FillPortion(2)),
+                // .into(),
+            ]
         } else {
-            crate::theme::widget::Row::with_children(vec![
-                iced::widget::text(label)
-                    .width(Length::FillPortion(6))
-                    .into(),
+            row![
+                iced::widget::text(label).width(Length::FillPortion(6)),
+                // .into(),
                 iced::widget::text_input("", s)
                     .on_input({
                         let k1 = k.clone();
                         move |a| Message::SettingChanged(k1.clone(), CValue::PickFile(a))
                     })
-                    .width(Length::FillPortion(5))
-                    .into(),
-                iced::widget::button(iced_aw::native::icon_text::IconText::new(
-                    iced_aw::graphics::icons::Icon::Folder,
-                ))
+                    .width(Length::FillPortion(5)),
+                // .into(),
+                iced::widget::button(
+                    text(NerdIcon::Folder)
+                        .font(NERD_FONT)
+                        .horizontal_alignment(Horizontal::Center)
+                )
                 .on_press(Message::FilePicker(k.clone()))
-                .width(Length::FillPortion(1))
-                .into(),
+                .width(Length::FillPortion(1)),
+                // .into(),
                 iced::widget::toggler(None, uses_default, move |a| {
                     Message::SettingDefaultChanged(k.clone(), a)
                 })
-                .width(Length::FillPortion(2))
-                .into(),
-            ])
+                .width(Length::FillPortion(2)),
+                // .into(),
+            ]
         }
         .height(Length::Fixed(WIDGET_HEIGHT as f32)),
         CValue::PickFolder(s) => row![
@@ -269,18 +275,20 @@ pub fn get_widget(
                     move |a| Message::SettingChanged(k1.clone(), CValue::PickFolder(a))
                 })
                 .width(Length::FillPortion(5)),
-            iced::widget::button(iced_aw::native::icon_text::IconText::new(
-                iced_aw::graphics::icons::Icon::Folder
-            ))
+            iced::widget::button(
+                text(NerdIcon::Folder)
+                    .font(NERD_FONT)
+                    .horizontal_alignment(Horizontal::Center)
+            )
             .on_press(Message::FolderPicker(k.clone()))
             .width(Length::FillPortion(1)),
             iced::widget::toggler(None, uses_default, move |a| {
                 Message::SettingDefaultChanged(k.clone(), a)
             })
             .width(Length::FillPortion(2)),
-        ]
-        .height(Length::Fixed(WIDGET_HEIGHT as f32)),
+        ],
     }
+    .align_items(Alignment::Center)
 }
 
 pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
@@ -312,8 +320,9 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
             .width(Length::FillPortion(5));
     }
 
-    let run_module: crate::theme::widget::Element<_> = if let Some(g) = mg.selected {
-        crate::theme::widget::Row::with_children(vec![
+    let run_module/*: crate::theme::widget::Element<_>*/ = if let Some(g) = mg.selected {
+        /*crate::theme::widget*/
+        iced::widget ::Row::with_children(vec![
             iced::widget::Space::with_width(Length::Fill).into(),
             if !mg.games[g].is_running {
                 iced::widget::button(iced::widget::text("run"))
@@ -339,9 +348,7 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
     let top_bar = crate::theme::widget::Row::with_children(vec![
         top_bar.into(),
         if let Some(i) = mg.selected {
-            crate::theme::widget::Element::<'_, Message>::from(iced::widget::text(
-                crate::duration_to_string(mg.games[i].time_played),
-            ))
+            text(crate::duration_to_string(mg.games[i].time_played)).into()
         } else {
             iced::widget::Space::with_width(Length::FillPortion(2)).into()
         },
@@ -361,30 +368,23 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
     //         ))
     //     });
 
-    let ge: Element<Message> = match mg.grid_status {
+    let ge: Element<_> = match mg.grid_status {
         crate::GridStatus::GamesGrid => {
             let image_size = IMAGE_WIDTH as u16;
 
-            let mut grid: iced_aw::Grid<Message, _> =
-                iced_aw::Grid::with_column_width(image_size as f32 + 20.);
+            let mut grid: iced_aw::OldGrid<Message, _> =
+                iced_aw::OldGrid::with_column_width(image_size as f32 + 20.);
             for (i, g) in mg.games.iter().enumerate() {
                 grid.insert::<Element<Message>>(
                     iced::widget::Container::new(
                         iced::widget::button(
                             iced::widget::column(vec![
-                                iced::widget::image(
-                                    iced::widget::image::Handle::from_pixels(
-                                        g.image.width(),
-                                        g.image.height(),
-                                        g.image.as_raw().clone(),
-                                    )
-                                    .set_filter(
-                                        TextureFilter {
-                                            min: FilterMethod::Nearest,
-                                            mag: FilterMethod::Nearest,
-                                        },
-                                    ),
-                                )
+                                iced::widget::image(iced::widget::image::Handle::from_pixels(
+                                    g.image.width(),
+                                    g.image.height(),
+                                    g.image.as_raw().clone(),
+                                ))
+                                .filter_method(FilterMethod::Nearest)
                                 // .width(Length::Fixed(image_size as f32))
                                 .height(Length::Fixed(IMAGE_HEIGHT as f32))
                                 .into(),
@@ -403,6 +403,7 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
                         }), // .height(Length::Fixed(600.))
                     )
                     .padding(iced::Padding::from(0))
+                    // .height(Length::Shrink)
                     .into(), // .into(),
                 );
             }
@@ -537,35 +538,51 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
             options.into()
         }
         crate::GridStatus::Logs => {
-            iced::widget::scrollable(iced::widget::text(if let Some(g) = mg.selected {
-                mg.games[g].current_log.clone()
-            } else {
-                String::new()
-            }))
-            .width(Length::Fill)
+            /* crate::theme::widget::Scrollable::new( */
+            iced::widget::Container::new(
+                crate::theme::widget::TextEditor::new(
+                    {
+                        //
+                        &mg.log
+                    }, //         if let Some(g) = mg.selected {
+                       //     &iced::widget::text_editor::Content::with_text(&mg.games[g].current_log)
+                       // } else {
+                       //     &iced::widget::text_editor::Content::new()
+                       // }
+                )
+                .on_action(|a| Message::LogAction(a)),
+            )
+            // .height(Length::Fixed(800.))
             .into()
         }
     };
 
-    let content = crate::theme::widget::Column::with_children(vec![
+    let content = column![
         // row![game_viewer, global_settings]
         //     .spacing(10)
-        top_bar.height(Length::Fixed(30 as f32)).into(),
-        iced::widget::scrollable(ge).height(Length::Fill).into(),
-    ])
+        top_bar.height(Length::Fixed(43 as f32)), /* .into() */
+        if let crate::GridStatus::Logs = mg.grid_status {
+            ge
+        } else {
+            iced::widget::Container::new(iced::widget::scrollable(ge))
+                .height(Length::Fill)
+                .into()
+            //.height(Length::Fill), /* .into() */
+        }
+    ]
     .spacing(20)
     .padding(20)
     .width(Length::Fill);
 
     let content: Element<_> = if mg.steam_grid_db {
         iced_aw::modal::Modal::new(
-            true,
+            // true,
             content,
-            column![
+            Some(column![
                 iced::widget::Space::with_height(Length::FillPortion(1)),
                 iced_aw::Card::new(iced::widget::text("Choose a banner"), {
-                    let mut grid: iced_aw::Grid<Message, _> =
-                        iced_aw::Grid::with_column_width(IMAGE_WIDTH as f32 + 20.);
+                    let mut grid: iced_aw::OldGrid<Message, _> =
+                        iced_aw::OldGrid::with_column_width(IMAGE_WIDTH as f32 + 20.);
                     for (i, im) in mg.sgdb_images.iter().enumerate() {
                         grid.insert::<Element<Message>>(
                             iced::widget::button(
@@ -621,7 +638,7 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
                 })
                 .height(Length::FillPortion(10)),
                 iced::widget::Space::with_height(Length::FillPortion(1)),
-            ],
+            ]),
         )
         .into()
     } else {

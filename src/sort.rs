@@ -4,14 +4,14 @@ use crate::games::Game;
 
 pub enum Sorts {
     Name,
-    ReleaseYear,
+    ReleaseDate,
 }
 
 impl Sorts {
     pub fn get_fn(&self) -> fn(&Game, &Game) -> Ordering {
         match self {
             Self::Name => |g: &Game, o: &Game| g.name.to_uppercase().cmp(&o.name.to_uppercase()),
-            Self::ReleaseYear => |g: &Game, o: &Game| {
+            Self::ReleaseDate => |g: &Game, o: &Game| {
                 g.release_year
                     .unwrap_or(isize::MAX)
                     .cmp(&o.release_year.unwrap_or(isize::MAX))

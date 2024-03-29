@@ -10,6 +10,8 @@ use crate::{
     pcsx2::Pcsx2Runner,
     rpcs3::Rpcs3Runner,
     ryujinx::RyujinxRunner,
+    steam::SteamRunner,
+    vita3k::Vita3kRunner,
     yuzu::YuzuRunner,
 };
 
@@ -180,6 +182,8 @@ pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
                     "gamescope".to_owned(),
                     #[cfg(unix)]
                     "gamescope_params".to_owned(),
+                    #[cfg(unix)]
+                    "gamemode".to_owned(),
                 ],
             ),
             ("native:native".to_owned(), vec!["native:args".to_owned()]),
@@ -234,6 +238,13 @@ pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
                 vec![
                     "citra:path_to_citra".to_owned(),
                     "citra:fullscreen".to_owned(),
+                ],
+            ),
+            (
+                "vita3k:vita3k".to_owned(),
+                vec![
+                    "vita3k:path_to_vita3k".to_owned(),
+                    "vita3k:fullscreen".to_owned(),
                 ],
             ),
         ]
@@ -325,6 +336,11 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
         out.insert(
             "gamescope_params".to_owned(),
             ("gamescope parameters".to_owned(), CValue::StrArr(vec![])),
+        );
+        #[cfg(unix)]
+        out.insert(
+            "gamemode".to_owned(),
+            ("gamemode".to_owned(), CValue::Bool(true)),
         );
 
         out.insert(
@@ -448,6 +464,14 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
         );
         out.insert(
             "citra:fullscreen".to_owned(),
+            ("fullscreen".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "vita3k:path_to_vita3k".to_owned(),
+            ("path to vita3k".to_owned(), CValue::PickFile("".to_owned())),
+        );
+        out.insert(
+            "vita3k:fullscreen".to_owned(),
             ("fullscreen".to_owned(), CValue::Bool(false)),
         );
 
@@ -653,6 +677,14 @@ impl Cfg {
                     .as_string(),
                 fullscreen: self.get_or_default("citra:fullscreen", &default).as_bool(),
             }),
+            "vita3k" => Box::new(Vita3kRunner {
+                path: path.clone(),
+                path_to_vita3k: self
+                    .get_or_default("vita3k:path_to_vita3k", &default)
+                    .as_string(),
+                fullscreen: self.get_or_default("vita3k:fullscreen", &default).as_bool(),
+            }),
+            "steam" => Box::new(SteamRunner { path: path.clone() }),
             _ => panic!("unknown runner"),
         };
 
@@ -684,6 +716,8 @@ impl Cfg {
                 gamescope_params: self
                     .get_or_default("gamescope_params", &default)
                     .as_strarr(),
+                #[cfg(unix)]
+                gamemode: self.get_or_default("gamemode", &default).as_bool(),
             },
 
             bare_config: self,

@@ -3,12 +3,13 @@ use std::{collections::HashMap, process::Stdio};
 use crate::process_subscription::PSubInput;
 
 #[cfg(unix)]
-pub const RUNNERS: [&str; 9] = [
-    "dummy", "native", "wine", "ryujinx", "rpcs3", "mame", "pcsx2", "yuzu", "citra",
+pub const RUNNERS: [&str; 11] = [
+    "dummy", "native", "wine", "ryujinx", "rpcs3", "mame", "pcsx2", "yuzu", "citra", "vita3k",
+    "steam",
 ];
 #[cfg(windows)]
-pub const RUNNERS: [&str; 8] = [
-    "dummy", "native", "ryujinx", "rpcs3", "mame", "pcsx2", "yuzu", "citra",
+pub const RUNNERS: [&str; 10] = [
+    "dummy", "native", "ryujinx", "rpcs3", "mame", "pcsx2", "yuzu", "citra", "vita3k", "steam",
 ];
 
 #[derive(Default, Debug, Clone)]
@@ -113,7 +114,22 @@ impl Command {
         }
 
         for (k, v) in cfg.envs.iter() {
+            #[cfg(unix)]
+            if cfg.gamemode {
+                if k == "LD_PRELOAD" {
+                    self.envs
+                        .insert(k.to_owned(), format!("libgamemodeauto.so.0:{}", v));
+                }
+                continue;
+            }
             self.envs.insert(k.to_owned(), v.to_owned());
+        }
+        #[cfg(unix)]
+        if cfg.gamemode {
+            if !self.envs.contains_key("LD_PRELOAD") {
+                self.envs
+                    .insert("LD_PRELOAD".to_owned(), "libgamemodeauto.so.0".to_owned());
+            }
         }
     }
 }
@@ -213,4 +229,6 @@ pub struct Config {
     pub gamescope: bool,
     #[cfg(unix)]
     pub gamescope_params: Vec<String>,
+    #[cfg(unix)]
+    pub gamemode: bool,
 }
