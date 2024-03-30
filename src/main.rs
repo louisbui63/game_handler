@@ -324,7 +324,7 @@ impl Application for MainGUI {
                 sort_alg: sort::Sorts::Name,
                 log: iced::widget::text_editor::Content::new(),
             },
-            iced::font::load(iced_aw::graphics::icons::NERD_FONT_BYTES).map(|_| Message::DoNothing),
+            iced::font::load(iced_aw::core::icons::NERD_FONT_BYTES).map(|_| Message::DoNothing),
             // Command::none(),
         )
     }
@@ -691,7 +691,7 @@ impl Application for MainGUI {
         }
     }
 
-    fn view(&self) -> theme::widget::Element<Message> {
+    fn view(&self) -> iced::Element<'_, Message, theme::Theme, iced::Renderer> {
         let MainGUI { .. } = self;
 
         ui::get_view_widget(self)

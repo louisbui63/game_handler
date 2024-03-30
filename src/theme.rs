@@ -3,7 +3,7 @@ pub mod widget {
 
     use crate::theme::Theme;
 
-    pub type Renderer = iced::Renderer<Theme>;
+    pub type Renderer = iced::Renderer;
     pub type Element<'a, Message> = iced::Element<'a, Message, Renderer>;
     // pub type Container<'a, Message> = iced::widget::Container<'a, Message, Renderer>;
     // pub type Button<'a, Message> = iced::widget::Button<'a, Message, Renderer>;
@@ -40,9 +40,9 @@ pub struct CurrentTheme {
     toggler_active_inactive: toggler::Appearance,
     toggler_hovered_active: toggler::Appearance,
     toggler_hovered_inactive: toggler::Appearance,
-    scrollable_active: scrollable::Scrollbar,
-    scrollable_hovered_mouse_over: scrollable::Scrollbar,
-    scrollable_hovered_no_mouse_over: scrollable::Scrollbar,
+    scrollable_active: scrollable::Appearance,
+    scrollable_hovered_mouse_over: scrollable::Appearance,
+    scrollable_hovered_no_mouse_over: scrollable::Appearance,
     pick_list_active: pick_list::Appearance,
     pick_list_hovered: pick_list::Appearance,
     overlay_menu: overlay::menu::Appearance,
@@ -319,7 +319,7 @@ impl toggler::StyleSheet for Theme {
 impl scrollable::StyleSheet for Theme {
     type Style = ();
 
-    fn active(&self, _style: &Self::Style) -> scrollable::Scrollbar {
+    fn active(&self, _style: &Self::Style) -> scrollable::Appearance {
         CURRENT_THEME.lock().unwrap().scrollable_active
     }
 
@@ -327,7 +327,7 @@ impl scrollable::StyleSheet for Theme {
         &self,
         _style: &Self::Style,
         is_mouse_over_scrollbar: bool,
-    ) -> scrollable::Scrollbar {
+    ) -> scrollable::Appearance {
         if is_mouse_over_scrollbar {
             CURRENT_THEME.lock().unwrap().scrollable_hovered_mouse_over
         } else {

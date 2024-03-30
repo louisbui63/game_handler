@@ -1,0 +1,1039 @@
+[app.background_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[app.text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text]
+
+[container.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[container.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[container.shadow]
+blur_radius = 0.0
+
+[container.shadow.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[container.shadow.offset]
+x = 0.0
+y = 0.0
+
+[button.shadow_offset]
+x = 0.0
+y = 0.0
+
+[button.text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[button.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[button.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[button.shadow]
+blur_radius = 0.0
+
+[button.shadow.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[button.shadow.offset]
+x = 0.0
+y = 0.0
+
+[grid_unselected.shadow_offset]
+x = 0.0
+y = 0.0
+
+[grid_unselected.text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[grid_unselected.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[grid_unselected.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[grid_unselected.shadow]
+blur_radius = 0.0
+
+[grid_unselected.shadow.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[grid_unselected.shadow.offset]
+x = 0.0
+y = 0.0
+
+[radio_active_selected]
+border_width = 0.0
+
+[radio_active_selected.background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[radio_active_selected.dot_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[radio_active_selected.border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[radio_active_unselected]
+border_width = 0.0
+
+[radio_active_unselected.background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[radio_active_unselected.dot_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[radio_active_unselected.border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[radio_hovered_selected]
+border_width = 0.0
+
+[radio_hovered_selected.background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[radio_hovered_selected.dot_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[radio_hovered_selected.border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[radio_hovered_unselected]
+border_width = 0.0
+
+[radio_hovered_unselected.background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[radio_hovered_unselected.dot_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[radio_hovered_unselected.border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[tab_bar_active_active]
+border_width = 0.0
+tab_label_border_width = 1.0
+icon_border_radius = [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+]
+
+[tab_bar_active_active.tab_label_background.Color]
+r = 0.8700000047683716
+g = 0.8700000047683716
+b = 0.8700000047683716
+a = 1.0
+
+[tab_bar_active_active.tab_label_border_color]
+r = 0.699999988079071
+g = 0.699999988079071
+b = 0.699999988079071
+a = 1.0
+
+[tab_bar_active_active.icon_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[tab_bar_active_active.icon_background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[tab_bar_active_active.text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[tab_bar_active_inactive]
+border_width = 0.0
+tab_label_border_width = 1.0
+icon_border_radius = [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+]
+
+[tab_bar_active_inactive.tab_label_background.Color]
+r = 0.8700000047683716
+g = 0.8700000047683716
+b = 0.8700000047683716
+a = 1.0
+
+[tab_bar_active_inactive.tab_label_border_color]
+r = 0.699999988079071
+g = 0.699999988079071
+b = 0.699999988079071
+a = 1.0
+
+[tab_bar_active_inactive.icon_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[tab_bar_active_inactive.icon_background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[tab_bar_active_inactive.text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[tab_bar_hovered_active]
+border_width = 0.0
+tab_label_border_width = 1.0
+icon_border_radius = [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+]
+
+[tab_bar_hovered_active.tab_label_background.Color]
+r = 0.8700000047683716
+g = 0.8700000047683716
+b = 0.8700000047683716
+a = 1.0
+
+[tab_bar_hovered_active.tab_label_border_color]
+r = 0.699999988079071
+g = 0.699999988079071
+b = 0.699999988079071
+a = 1.0
+
+[tab_bar_hovered_active.icon_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[tab_bar_hovered_active.icon_background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[tab_bar_hovered_active.text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[tab_bar_hovered_inactive]
+border_width = 0.0
+tab_label_border_width = 1.0
+icon_border_radius = [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+]
+
+[tab_bar_hovered_inactive.tab_label_background.Color]
+r = 0.8700000047683716
+g = 0.8700000047683716
+b = 0.8700000047683716
+a = 1.0
+
+[tab_bar_hovered_inactive.tab_label_border_color]
+r = 0.699999988079071
+g = 0.699999988079071
+b = 0.699999988079071
+a = 1.0
+
+[tab_bar_hovered_inactive.icon_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[tab_bar_hovered_inactive.icon_background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[tab_bar_hovered_inactive.text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[text_input_active.background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_input_active.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[text_input_active.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_input_active.icon_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_input_focused.background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_input_focused.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[text_input_focused.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_input_focused.icon_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_input_placeholder_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_input_value_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_input_disabled_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_input_selection_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_input_disabled.background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_input_disabled.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[text_input_disabled.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_input_disabled.icon_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[card_active]
+border_radius = 10.0
+border_width = 1.0
+
+[card_active.background.Color]
+r = 1.0
+g = 1.0
+b = 1.0
+a = 1.0
+
+[card_active.border_color]
+r = 0.8700000047683716
+g = 0.8700000047683716
+b = 0.8700000047683716
+a = 1.0
+
+[card_active.head_background.Color]
+r = 0.8700000047683716
+g = 0.8700000047683716
+b = 0.8700000047683716
+a = 1.0
+
+[card_active.head_text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[card_active.body_background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[card_active.body_text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[card_active.foot_background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[card_active.foot_text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[card_active.close_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 1.0
+
+[modal_active.background.Color]
+r = 0.8700000047683716
+g = 0.8700000047683716
+b = 0.8700000047683716
+a = 0.30000001192092896
+
+[toggler_active_active]
+background_border_width = 0.0
+foreground_border_width = 0.0
+
+[toggler_active_active.background]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_active_active.background_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_active_active.foreground]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_active_active.foreground_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_active_inactive]
+background_border_width = 0.0
+foreground_border_width = 0.0
+
+[toggler_active_inactive.background]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_active_inactive.background_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_active_inactive.foreground]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_active_inactive.foreground_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_hovered_active]
+background_border_width = 0.0
+foreground_border_width = 0.0
+
+[toggler_hovered_active.background]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_hovered_active.background_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_hovered_active.foreground]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_hovered_active.foreground_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_hovered_inactive]
+background_border_width = 0.0
+foreground_border_width = 0.0
+
+[toggler_hovered_inactive.background]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_hovered_inactive.background_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_hovered_inactive.foreground]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_hovered_inactive.foreground_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_active.container.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[scrollable_active.container.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_active.container.shadow]
+blur_radius = 0.0
+
+[scrollable_active.container.shadow.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_active.container.shadow.offset]
+x = 0.0
+y = 0.0
+
+[scrollable_active.scrollbar.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[scrollable_active.scrollbar.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_active.scrollbar.scroller.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_active.scrollbar.scroller.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[scrollable_active.scrollbar.scroller.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_mouse_over.container.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[scrollable_hovered_mouse_over.container.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_mouse_over.container.shadow]
+blur_radius = 0.0
+
+[scrollable_hovered_mouse_over.container.shadow.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_mouse_over.container.shadow.offset]
+x = 0.0
+y = 0.0
+
+[scrollable_hovered_mouse_over.scrollbar.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[scrollable_hovered_mouse_over.scrollbar.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_mouse_over.scrollbar.scroller.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_mouse_over.scrollbar.scroller.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[scrollable_hovered_mouse_over.scrollbar.scroller.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_no_mouse_over.container.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[scrollable_hovered_no_mouse_over.container.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_no_mouse_over.container.shadow]
+blur_radius = 0.0
+
+[scrollable_hovered_no_mouse_over.container.shadow.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_no_mouse_over.container.shadow.offset]
+x = 0.0
+y = 0.0
+
+[scrollable_hovered_no_mouse_over.scrollbar.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[scrollable_hovered_no_mouse_over.scrollbar.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_no_mouse_over.scrollbar.scroller.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_no_mouse_over.scrollbar.scroller.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[scrollable_hovered_no_mouse_over.scrollbar.scroller.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[pick_list_active.text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[pick_list_active.placeholder_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[pick_list_active.handle_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[pick_list_active.background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[pick_list_active.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[pick_list_active.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[pick_list_hovered.text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[pick_list_hovered.placeholder_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[pick_list_hovered.handle_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[pick_list_hovered.background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[pick_list_hovered.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[pick_list_hovered.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[overlay_menu.text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[overlay_menu.background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[overlay_menu.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[overlay_menu.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[overlay_menu.selected_text_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[overlay_menu.selected_background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_editor_active.background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_editor_active.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[text_editor_active.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_editor_focused.background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_editor_focused.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[text_editor_focused.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_editor_disabled.background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_editor_disabled.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[text_editor_disabled.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_editor_placeholder_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_editor_value_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_editor_disabled_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[text_editor_selection_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+

@@ -5,12 +5,13 @@ use crate::IMAGE_HEIGHT;
 use crate::{IMAGE_WIDTH, WIDGET_HEIGHT};
 use config::CValue;
 use iced::alignment::Horizontal;
+use iced::color;
 use iced::widget::image::FilterMethod;
 use iced::widget::text;
 use iced::widget::{button, column, container, row};
 use iced::Alignment;
 use iced::{Length, Theme};
-use iced_aw::NerdIcon;
+use iced_aw::Nerd;
 use iced_aw::NERD_FONT;
 use iced_aw::{TabBar, TabLabel};
 
@@ -25,6 +26,25 @@ impl iced::widget::button::StyleSheet for ButtonStyle {
                 Theme::Light => iced::Color::BLACK,
                 Theme::Dark => iced::Color::WHITE,
                 Theme::Custom(_) => iced::color!(255, 0, 0),
+                Theme::Dracula => todo!(),
+                Theme::Nord => todo!(),
+                Theme::SolarizedLight => todo!(),
+                Theme::SolarizedDark => todo!(),
+                Theme::GruvboxLight => todo!(),
+                Theme::GruvboxDark => todo!(),
+                Theme::CatppuccinLatte => todo!(),
+                Theme::CatppuccinFrappe => todo!(),
+                Theme::CatppuccinMacchiato => todo!(),
+                Theme::CatppuccinMocha => todo!(),
+                Theme::TokyoNight => todo!(),
+                Theme::TokyoNightStorm => todo!(),
+                Theme::TokyoNightLight => todo!(),
+                Theme::KanagawaWave => todo!(),
+                Theme::KanagawaDragon => todo!(),
+                Theme::KanagawaLotus => todo!(),
+                Theme::Moonfly => todo!(),
+                Theme::Nightfly => todo!(),
+                Theme::Oxocarbon => todo!(),
             },
             ..Default::default()
         }
@@ -36,18 +56,19 @@ pub fn get_widget(
     label: String,
     k: String,
     uses_default: bool,
-) -> crate::theme::widget::Row<'_, Message> {
+) -> iced::widget::Row<'_, Message, crate::theme::Theme, iced::Renderer> {
     match v {
         config::CValue::Str(s) => row![
-            iced::widget::text(label).width(Length::FillPortion(3)),
-            // .into(),
+            iced::widget::text(label)
+                .width(Length::FillPortion(3)),
+                // .into(),
             iced::widget::text_input("", s)
                 .on_input({
                     let k1 = k.clone();
                     move |a| Message::SettingChanged(k1.clone(), CValue::Str(a))
                 })
                 .width(Length::FillPortion(3)),
-            // .into(),
+                // .into(),
             iced::widget::toggler(None, uses_default, move |a| {
                 Message::SettingDefaultChanged(k.clone(), a)
             })
@@ -55,16 +76,20 @@ pub fn get_widget(
             // .into(),
         ]
         .height(Length::Fixed(WIDGET_HEIGHT as f32)),
+
         config::CValue::Bool(b) => row![
-            iced::widget::text(label).width(Length::FillPortion(3)),
-            // .into(),
-            iced::widget::Container::new(iced::widget::toggler(None, *b, {
-                let k1 = k.clone();
-                move |a| Message::SettingChanged(k1.clone(), CValue::Bool(a))
-            }))
+            iced::widget::text(label)
+                .width(Length::FillPortion(3)),
+                // .into(),
+            iced::widget::Container::new(
+                iced::widget::toggler(None, *b, {
+                    let k1 = k.clone();
+                    move |a| Message::SettingChanged(k1.clone(), CValue::Bool(a))
+                }),
+                // .into()
+            )
             .width(Length::FillPortion(1)),
-            iced::widget::Space::with_width(Length::FillPortion(2)),
-            // .into(),
+            iced::widget::Space::with_width(Length::FillPortion(2)),//.into(),
             iced::widget::toggler(None, uses_default, move |a| {
                 Message::SettingDefaultChanged(k.clone(), a)
             })
@@ -76,7 +101,7 @@ pub fn get_widget(
             // log::error!("Feature StrArr() not yet available in config display");
             let mut col = Vec::new();
             for i in 0..(arr.len() / 2) + 1 {
-                let mut row: Vec<Element<_>>/*: Vec<Element<'_, Message, _>>*/ = Vec::new();
+                let mut row: Vec<iced::Element<'_, Message, crate::theme::Theme, iced::Renderer>>/*: Vec<Element<'_, Message, _>>*/ = Vec::new();
                 row.push(
                     iced::widget::text_input(
                         "",
@@ -184,7 +209,7 @@ pub fn get_widget(
         }
         config::CValue::OneOff(l, s) => row![
             iced::widget::text(label).width(Length::FillPortion(3)),
-            iced::widget::pick_list(l, Some(l[*s].clone()), {
+            iced::widget::pick_list(l.clone(), Some(l[*s].clone()), {
                 let k1 = k.clone();
                 move |a| {
                     Message::SettingChanged(
@@ -252,7 +277,7 @@ pub fn get_widget(
                     .width(Length::FillPortion(5)),
                 // .into(),
                 iced::widget::button(
-                    text(NerdIcon::Folder)
+                    text(Nerd::Folder)
                         .font(NERD_FONT)
                         .horizontal_alignment(Horizontal::Center)
                 )
@@ -276,7 +301,7 @@ pub fn get_widget(
                 })
                 .width(Length::FillPortion(5)),
             iced::widget::button(
-                text(NerdIcon::Folder)
+                text(Nerd::Folder)
                     .font(NERD_FONT)
                     .horizontal_alignment(Horizontal::Center)
             )
@@ -291,8 +316,15 @@ pub fn get_widget(
     .align_items(Alignment::Center)
 }
 
-pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
-    let mut top_bar = TabBar::new(Message::SetGridStatus)
+pub fn get_view_widget(
+    mg: &crate::MainGUI,
+) -> iced::Element<'_, Message, crate::theme::Theme, iced::Renderer> {
+    let mut top_bar: iced_aw::widgets::TabBar<
+        Message,
+        crate::GridStatus,
+        crate::theme::Theme,
+        iced::Renderer,
+    > = TabBar::new(Message::SetGridStatus)
         // .style(TabBarStyles::Blue)
         .push(
             crate::GridStatus::GamesGrid,
@@ -307,7 +339,8 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
             TabLabel::Text("Add Game".to_owned()),
         )
         .set_active_tab(&mg.grid_status)
-        .width(Length::FillPortion(3));
+        .width(Length::FillPortion(3))
+        .into();
 
     if let Some(_) = mg.selected {
         top_bar = top_bar
@@ -320,32 +353,35 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
             .width(Length::FillPortion(5));
     }
 
-    let run_module/*: crate::theme::widget::Element<_>*/ = if let Some(g) = mg.selected {
-        /*crate::theme::widget*/
-        iced::widget ::Row::with_children(vec![
-            iced::widget::Space::with_width(Length::Fill).into(),
-            if !mg.games[g].is_running {
-                iced::widget::button(iced::widget::text("run"))
-                    .on_press(Message::RunSelected)
-                    .into()
-            } else {
-                iced::widget::button(iced::widget::text("kill"))
-                    .on_press(Message::KillSelected)
-                    .into()
-            },
-            iced::widget::pick_list(mg.games[g].get_subcommands(), None, |i| {
-                Message::RunSubcommandSelected(i)
-            })
-            .into(), // .width(Length::Units(30))
-        ])
-        .align_items(iced::Alignment::End)
-        .width(Length::FillPortion(2))
-        .into()
-    } else {
-        iced::widget::Space::with_width(Length::FillPortion(2)).into()
-    };
+    let run_module: iced::Element<'_, Message, crate::theme::Theme, iced::Renderer> =
+        if let Some(g) = mg.selected {
+            /*crate::theme::widget*/
+            iced::widget::Row::with_children(vec![
+                iced::widget::Space::with_width(Length::Fill).into(),
+                if !mg.games[g].is_running {
+                    iced::widget::button(iced::widget::text("run"))
+                        .on_press(Message::RunSelected)
+                        .into()
+                } else {
+                    iced::widget::button(iced::widget::text("kill"))
+                        .on_press(Message::KillSelected)
+                        .into()
+                },
+                iced::widget::pick_list::<'_, _, _, String, _, _, _>(
+                    mg.games[g].get_subcommands(),
+                    None,
+                    |i| Message::RunSubcommandSelected(i),
+                )
+                .into(), // .width(Length::Units(30))
+            ])
+            .align_items(iced::Alignment::End)
+            .width(Length::FillPortion(2))
+            .into()
+        } else {
+            iced::widget::Space::with_width(Length::FillPortion(2)).into()
+        };
 
-    let top_bar = crate::theme::widget::Row::with_children(vec![
+    let top_bar = iced::widget::Row::with_children(vec![
         top_bar.into(),
         if let Some(i) = mg.selected {
             text(crate::duration_to_string(mg.games[i].time_played)).into()
@@ -368,14 +404,14 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
     //         ))
     //     });
 
-    let ge: Element<_> = match mg.grid_status {
+    let ge: iced::Element<'_, Message, crate::theme::Theme, iced::Renderer> = match mg.grid_status {
         crate::GridStatus::GamesGrid => {
             let image_size = IMAGE_WIDTH as u16;
 
             let mut grid: iced_aw::OldGrid<Message, _> =
                 iced_aw::OldGrid::with_column_width(image_size as f32 + 20.);
             for (i, g) in mg.games.iter().enumerate() {
-                grid.insert::<Element<Message>>(
+                grid.insert::<iced::Element<'_, Message, crate::theme::Theme, iced::Renderer>>(
                     iced::widget::Container::new(
                         iced::widget::button(
                             iced::widget::column(vec![
@@ -540,7 +576,7 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
         crate::GridStatus::Logs => {
             /* crate::theme::widget::Scrollable::new( */
             iced::widget::Container::new(
-                crate::theme::widget::TextEditor::new(
+                iced::widget::TextEditor::new(
                     {
                         //
                         &mg.log
@@ -574,82 +610,81 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> Element<Message> {
     .padding(20)
     .width(Length::Fill);
 
-    let content: Element<_> = if mg.steam_grid_db {
-        iced_aw::modal::Modal::new(
-            // true,
-            content,
-            Some(column![
-                iced::widget::Space::with_height(Length::FillPortion(1)),
-                iced_aw::Card::new(iced::widget::text("Choose a banner"), {
-                    let mut grid: iced_aw::OldGrid<Message, _> =
-                        iced_aw::OldGrid::with_column_width(IMAGE_WIDTH as f32 + 20.);
-                    for (i, im) in mg.sgdb_images.iter().enumerate() {
-                        grid.insert::<Element<Message>>(
-                            iced::widget::button(
-                                iced::widget::column(vec![iced::widget::image(
-                                    iced::widget::image::Handle::from_pixels(
-                                        im.1.width(),
-                                        im.1.height(),
-                                        im.1.as_raw().clone(),
-                                    ),
+    let content: iced::Element<'_, Message, crate::theme::Theme, iced::Renderer> =
+        if mg.steam_grid_db {
+            iced_aw::modal::Modal::new(
+                // true,
+                content,
+                Some(column![
+                    iced::widget::Space::with_height(Length::FillPortion(1)),
+                    iced_aw::Card::new(iced::widget::text("Choose a banner"), {
+                        let mut grid: iced_aw::OldGrid<Message, _> =
+                            iced_aw::OldGrid::with_column_width(IMAGE_WIDTH as f32 + 20.);
+                        for (i, im) in mg.sgdb_images.iter().enumerate() {
+                            grid.insert::<iced::Element<'_, Message, crate::theme::Theme>>(
+                                iced::widget::button(
+                                    iced::widget::column(vec![iced::widget::image(
+                                        iced::widget::image::Handle::from_pixels(
+                                            im.1.width(),
+                                            im.1.height(),
+                                            im.1.as_raw().clone(),
+                                        ),
+                                    )
+                                    .width(Length::Fixed(IMAGE_WIDTH as f32))
+                                    .into()])
+                                    .align_items(iced::Alignment::Center),
                                 )
-                                .width(Length::Fixed(IMAGE_WIDTH as f32))
-                                .into()])
-                                .align_items(iced::Alignment::Center),
+                                .on_press(Message::SGDBThumbSelected(i))
+                                .style(if Some(i) != mg.sgdb_selected {
+                                    crate::theme::ButtonStyle::GridUnselected
+                                    // iced::theme::Button::Custom(Box::new(ButtonStyle()))
+                                } else {
+                                    // iced::theme::Button::default()
+                                    crate::theme::ButtonStyle::GridSelected
+                                })
+                                .into(),
+                            );
+                        }
+
+                        let mut query = vec![iced::widget::text_input("", &mg.sgdb_query[..])
+                            .on_input(|a| Message::SGDBChangeQuery(a))
+                            .into()];
+                        for g in mg.sgdb_other_possibilities.iter() {
+                            query.push(
+                                iced::widget::button(iced::widget::text(format!(
+                                    "{} ({}) -{}",
+                                    g.name,
+                                    g.release_date.unwrap_or_default(),
+                                    g.id,
+                                )))
+                                .on_press(Message::SGDBSelectGame(g.id))
+                                .into(),
                             )
-                            .on_press(Message::SGDBThumbSelected(i))
-                            .style(if Some(i) != mg.sgdb_selected {
-                                crate::theme::ButtonStyle::GridUnselected
-                                // iced::theme::Button::Custom(Box::new(ButtonStyle()))
-                            } else {
-                                // iced::theme::Button::default()
-                                crate::theme::ButtonStyle::GridSelected
-                            })
-                            .into(),
-                        );
-                    }
+                        }
 
-                    let mut query = vec![iced::widget::text_input("", &mg.sgdb_query[..])
-                        .on_input(|a| Message::SGDBChangeQuery(a))
-                        .into()];
-                    for g in mg.sgdb_other_possibilities.iter() {
-                        query.push(
-                            iced::widget::button(iced::widget::text(format!(
-                                "{} ({}) -{}",
-                                g.name,
-                                g.release_date.unwrap_or_default(),
-                                g.id,
-                            )))
-                            .on_press(Message::SGDBSelectGame(g.id))
-                            .into(),
-                        )
-                    }
-
-                    iced::widget::scrollable(column![
-                        iced::widget::Column::with_children(query),
-                        grid,
-                        row![
-                            iced::widget::button(iced::widget::text("Cancel"))
-                                .on_press(Message::CancelSGDB),
-                            iced::widget::button(iced::widget::text("Ok"))
-                                .on_press(Message::ApplySGDB),
-                        ]
-                    ])
-                })
-                .height(Length::FillPortion(10)),
-                iced::widget::Space::with_height(Length::FillPortion(1)),
-            ]),
-        )
-        .into()
-    } else {
-        content.into()
-    };
+                        iced::widget::scrollable(column![
+                            iced::widget::Column::with_children(query),
+                            grid,
+                            row![
+                                iced::widget::button(iced::widget::text("Cancel"))
+                                    .on_press(Message::CancelSGDB),
+                                iced::widget::button(iced::widget::text("Ok"))
+                                    .on_press(Message::ApplySGDB),
+                            ]
+                        ])
+                    })
+                    .height(Length::FillPortion(10)),
+                    iced::widget::Space::with_height(Length::FillPortion(1)),
+                ]),
+            )
+            .into()
+        } else {
+            content.into()
+        };
     container(content)
         .width(Length::Fill)
         .height(Length::Fill)
         .center_x()
         .center_y()
         .into()
-
-    //content
 }
