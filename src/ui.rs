@@ -586,9 +586,10 @@ pub fn get_view_widget(
                        //     &iced::widget::text_editor::Content::new()
                        // }
                 )
-                .on_action(|a| Message::LogAction(a)),
+                .on_action(|a| Message::LogAction(a))
+                .height(Length::Fill),
             )
-            // .height(Length::Fixed(800.))
+            .height(Length::Fill)
             .into()
         }
     };
