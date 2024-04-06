@@ -167,7 +167,7 @@ pub struct Game {
     pub no_sleep: Option<nosleep::NoSleep>,
 
     pub time_played: std::time::Duration,
-    pub time_started: Option<std::time::Instant>,
+    pub time_started: Option<std::time::SystemTime>,
     pub time_played_this_year: std::time::Duration,
 
     pub is_running: bool,

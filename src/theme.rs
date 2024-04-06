@@ -1,15 +1,9 @@
 pub mod widget {
     use iced::advanced::text::highlighter::PlainText;
 
-    use crate::theme::Theme;
-
     pub type Renderer = iced::Renderer;
     pub type Element<'a, Message> = iced::Element<'a, Message, Renderer>;
-    // pub type Container<'a, Message> = iced::widget::Container<'a, Message, Renderer>;
-    // pub type Button<'a, Message> = iced::widget::Button<'a, Message, Renderer>;
     pub type Row<'a, Message> = iced::widget::Row<'a, Message, Renderer>;
-    // pub type Column<'a, Message> = iced::widget::Column<'a, Message, Renderer>;
-    // pub type Scrollable<'a, Message> = iced::widget::Scrollable<'a, Message, Renderer>;
     pub type TextEditor<'a, Message> = iced::widget::TextEditor<'a, PlainText, Message, Renderer>;
 }
 #[derive(serde::Serialize, serde::Deserialize, Default)]
@@ -374,39 +368,37 @@ a = 1.0
 
 [text]
 
-[container]
-border_radius = [
+[container.border]
+width = 0.0
+radius = [
     0.0,
     0.0,
     0.0,
     0.0,
 ]
-border_width = 0.0
 
-[container.border_color]
+[container.border.color]
 r = 0.0
 g = 0.0
 b = 0.0
 a = 0.0
 
-[button]
-border_radius = [
-    2.0,
-    2.0,
-    2.0,
-    2.0,
-]
-border_width = 0.0
+[container.shadow]
+blur_radius = 0.0
+
+[container.shadow.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[container.shadow.offset]
+x = 0.0
+y = 0.0
 
 [button.shadow_offset]
 x = 0.0
 y = 0.0
-
-[button.border_color]
-r = 0.0
-g = 0.0
-b = 0.0
-a = 0.0
 
 [button.text_color]
 r = 0.19
@@ -420,24 +412,37 @@ g = 0.67
 b = 1.0
 a = 1.0
 
-[grid_unselected]
-border_radius = [
+[button.border]
+width = 0.0
+radius = [
     0.0,
     0.0,
     0.0,
     0.0,
 ]
-border_width = 0.0
 
-[grid_unselected.shadow_offset]
-x = 0.0
-y = 0.0
-
-[grid_unselected.border_color]
+[button.border.color]
 r = 0.0
 g = 0.0
 b = 0.0
 a = 0.0
+
+[button.shadow]
+blur_radius = 0.0
+
+[button.shadow.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[button.shadow.offset]
+x = 0.0
+y = 0.0
+
+[grid_unselected.shadow_offset]
+x = 0.0
+y = 0.0
 
 [grid_unselected.text_color]
 r = 0.73
@@ -450,6 +455,34 @@ r = 0.19
 g = 0.20
 b = 0.27
 a = 1.0
+
+[grid_unselected.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[grid_unselected.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[grid_unselected.shadow]
+blur_radius = 0.0
+
+[grid_unselected.shadow.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[grid_unselected.shadow.offset]
+x = 0.0
+y = 0.0
 
 [radio_active_selected]
 border_width = 0.0
@@ -518,31 +551,31 @@ a = 0.0
 border_width = 0.0
 
 [radio_hovered_unselected.background.Color]
-r = 0.76
-g = 0.60
-b = 0.76
+r = 1.0
+g = 0.67
+b = 1.0
 a = 1.0
 
 [radio_hovered_unselected.dot_color]
-r = 0.73
-g = 0.76
-b = 0.90
-a = 1.0
-
-[radio_hovered_unselected.border_color]
 r = 0.0
 g = 0.0
 b = 0.0
 a = 0.0
 
+[radio_hovered_unselected.border_color]
+r = 0.73
+g = 0.76
+b = 0.90
+a = 1.0
+
 [tab_bar_active_active]
 border_width = 0.0
 tab_label_border_width = 0.0
 icon_border_radius = [
-    0.0,
-    0.0,
-    0.0,
-    0.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
 ]
 
 [tab_bar_active_active.tab_label_background.Color]
@@ -563,6 +596,12 @@ g = 0.0
 b = 0.0
 a = 1.0
 
+[tab_bar_active_active.icon_background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
 [tab_bar_active_active.text_color]
 r = 0.19
 g = 0.20
@@ -573,10 +612,10 @@ a = 1.0
 border_width = 0.0
 tab_label_border_width = 0.0
 icon_border_radius = [
-    0.0,
-    0.0,
-    0.0,
-    0.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
 ]
 
 [tab_bar_active_inactive.tab_label_background.Color]
@@ -586,16 +625,22 @@ b = 0.88
 a = 1.0
 
 [tab_bar_active_inactive.tab_label_border_color]
-r = 0.0
-g = 0.0
-b = 0.0
-a = 0.0
+r = 0.699999988079071
+g = 0.699999988079071
+b = 0.699999988079071
+a = 1.0
 
 [tab_bar_active_inactive.icon_color]
 r = 0.0
 g = 0.0
 b = 0.0
 a = 1.0
+
+[tab_bar_active_inactive.icon_background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
 
 [tab_bar_active_inactive.text_color]
 r = 0.19
@@ -607,10 +652,10 @@ a = 1.0
 border_width = 0.0
 tab_label_border_width = 0.0
 icon_border_radius = [
-    0.0,
-    0.0,
-    0.0,
-    0.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
 ]
 
 [tab_bar_hovered_active.tab_label_background.Color]
@@ -620,16 +665,22 @@ b = 0.91
 a = 1.0
 
 [tab_bar_hovered_active.tab_label_border_color]
-r = 0.0
-g = 0.0
-b = 0.0
-a = 0.0
+r = 0.699999988079071
+g = 0.699999988079071
+b = 0.699999988079071
+a = 1.0
 
 [tab_bar_hovered_active.icon_color]
 r = 0.0
 g = 0.0
 b = 0.0
 a = 1.0
+
+[tab_bar_hovered_active.icon_background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
 
 [tab_bar_hovered_active.text_color]
 r = 0.19
@@ -641,10 +692,10 @@ a = 1.0
 border_width = 0.0
 tab_label_border_width = 0.0
 icon_border_radius = [
-    0.0,
-    0.0,
-    0.0,
-    0.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
 ]
 
 [tab_bar_hovered_inactive.tab_label_background.Color]
@@ -654,10 +705,10 @@ b = 0.73
 a = 1.0
 
 [tab_bar_hovered_inactive.tab_label_border_color]
-r = 0.0
-g = 0.0
-b = 0.0
-a = 0.0
+r = 0.699999988079071
+g = 0.699999988079071
+b = 0.699999988079071
+a = 1.0
 
 [tab_bar_hovered_inactive.icon_color]
 r = 0.0
@@ -665,20 +716,17 @@ g = 0.0
 b = 0.0
 a = 1.0
 
+[tab_bar_hovered_inactive.icon_background.Color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
 [tab_bar_hovered_inactive.text_color]
 r = 0.19
 g = 0.20
 b = 0.27
 a = 1.0
-
-[text_input_active]
-border_radius = [
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-]
-border_width = 1.0
 
 [text_input_active.background.Color]
 r = 0.19
@@ -686,7 +734,16 @@ g = 0.20
 b = 0.27
 a = 1.0
 
-[text_input_active.border_color]
+[text_input_active.border]
+width = 1.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[text_input_active.border.color]
 r = 0.73
 g = 0.76
 b = 0.90
@@ -696,16 +753,7 @@ a = 1.0
 r = 0.0
 g = 0.0
 b = 0.0
-a = 1.0
-
-[text_input_focused]
-border_radius = [
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-]
-border_width = 1.0
+a = 0.0
 
 [text_input_focused.background.Color]
 r = 0.19
@@ -713,7 +761,16 @@ g = 0.20
 b = 0.27
 a = 1.0
 
-[text_input_focused.border_color]
+[text_input_focused.border]
+width = 1.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[text_input_focused.border.color]
 r = 0.73
 g = 0.76
 b = 0.90
@@ -723,13 +780,13 @@ a = 1.0
 r = 0.0
 g = 0.0
 b = 0.0
-a = 1.0
+a = 0.0
 
 [text_input_placeholder_color]
 r = 0.0
 g = 0.0
 b = 0.0
-a = 1.0
+a = 0.0
 
 [text_input_value_color]
 r = 0.73
@@ -741,44 +798,44 @@ a = 1.0
 r = 0.0
 g = 0.0
 b = 0.0
-a = 1.0
+a = 0.0
 
 [text_input_selection_color]
-r = 0.76
-g = 0.60
-b = 0.76
+r = 0.73
+g = 0.76
+b = 0.90
 a = 1.0
-
-[text_input_disabled]
-border_radius = [
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-]
-border_width = 0.0
 
 [text_input_disabled.background.Color]
 r = 0.0
 g = 0.0
 b = 0.0
-a = 1.0
+a = 0.0
 
-[text_input_disabled.border_color]
+[text_input_disabled.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[text_input_disabled.border.color]
 r = 0.0
 g = 0.0
 b = 0.0
-a = 1.0
+a = 0.0
 
 [text_input_disabled.icon_color]
 r = 0.0
 g = 0.0
 b = 0.0
-a = 1.0
+a = 0.0
 
 [card_active]
 border_radius = 10.0
-border_width = 0.0
+border_width = 1.0
 
 [card_active.background.Color]
 r = 0.0
@@ -840,11 +897,21 @@ g = 1.0
 b = 1.0
 a = 0.1
 
+[toggler_active_active]
+background_border_width = 0.0
+foreground_border_width = 0.0
+
 [toggler_active_active.background]
 r = 1.0
 g = 0.67
 b = 1.0
 a = 1.0
+
+[toggler_active_active.background_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
 
 [toggler_active_active.foreground]
 r = 0.19
@@ -852,11 +919,27 @@ g = 0.20
 b = 0.27
 a = 1.0
 
+[toggler_active_active.foreground_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_active_inactive]
+background_border_width = 0.0
+foreground_border_width = 0.0
+
 [toggler_active_inactive.background]
 r = 0.74
 g = 0.68
 b = 0.88
 a = 1.0
+
+[toggler_active_inactive.background_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
 
 [toggler_active_inactive.foreground]
 r = 0.19
@@ -864,11 +947,27 @@ g = 0.20
 b = 0.27
 a = 1.0
 
+[toggler_active_inactive.foreground_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_hovered_active]
+background_border_width = 0.0
+foreground_border_width = 0.0
+
 [toggler_hovered_active.background]
 r = 1.0
 g = 0.67
 b = 1.0
 a = 1.0
+
+[toggler_hovered_active.background_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
 
 [toggler_hovered_active.foreground]
 r = 0.19
@@ -876,11 +975,27 @@ g = 0.20
 b = 0.27
 a = 1.0
 
+[toggler_hovered_active.foreground_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[toggler_hovered_inactive]
+background_border_width = 0.0
+foreground_border_width = 0.0
+
 [toggler_hovered_inactive.background]
 r = 0.74
 g = 0.68
 b = 0.88
 a = 1.0
+
+[toggler_hovered_inactive.background_border_color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
 
 [toggler_hovered_inactive.foreground]
 r = 0.19
@@ -888,122 +1003,203 @@ g = 0.20
 b = 0.27
 a = 1.0
 
-[scrollable_active]
-border_radius = [
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-]
-border_width = 0.0
-
-[scrollable_active.border_color]
+[toggler_hovered_inactive.foreground_border_color]
 r = 0.0
 g = 0.0
 b = 0.0
 a = 0.0
 
-[scrollable_active.scroller]
-border_radius = [
-    2.0,
-    2.0,
-    2.0,
-    2.0,
+[scrollable_active.container.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
 ]
-border_width = 0.0
 
-[scrollable_active.scroller.color]
+[scrollable_active.container.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_active.container.shadow]
+blur_radius = 0.0
+
+[scrollable_active.container.shadow.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_active.container.shadow.offset]
+x = 0.0
+y = 0.0
+
+[scrollable_active.scrollbar.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[scrollable_active.scrollbar.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_active.scrollbar.scroller.color]
 r = 0.73
 g = 0.76
 b = 0.90
 a = 1.0
 
-[scrollable_active.scroller.border_color]
-r = 0.0
-g = 0.0
-b = 0.0
-a = 1.0
-
-[scrollable_hovered_mouse_over]
-border_radius = [
+[scrollable_active.scrollbar.scroller.border]
+width = 0.0
+radius = [
     0.0,
     0.0,
     0.0,
     0.0,
 ]
-border_width = 0.0
 
-[scrollable_hovered_mouse_over.border_color]
+[scrollable_active.scrollbar.scroller.border.color]
 r = 0.0
 g = 0.0
 b = 0.0
-a = 1.0
+a = 0.0
 
-[scrollable_hovered_mouse_over.scroller]
-border_radius = [
-    2.0,
-    2.0,
-    2.0,
-    2.0,
+[scrollable_hovered_mouse_over.container.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
 ]
-border_width = 0.0
 
-[scrollable_hovered_mouse_over.scroller.color]
+[scrollable_hovered_mouse_over.container.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_mouse_over.container.shadow]
+blur_radius = 0.0
+
+[scrollable_hovered_mouse_over.container.shadow.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_mouse_over.container.shadow.offset]
+x = 0.0
+y = 0.0
+
+[scrollable_hovered_mouse_over.scrollbar.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[scrollable_hovered_mouse_over.scrollbar.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_mouse_over.scrollbar.scroller.color]
 r = 1.0
 g = 0.67
 b = 1.0
 a = 1.0
 
-[scrollable_hovered_mouse_over.scroller.border_color]
-r = 0.0
-g = 0.0
-b = 0.0
-a = 1.0
-
-[scrollable_hovered_no_mouse_over]
-border_radius = [
+[scrollable_hovered_mouse_over.scrollbar.scroller.border]
+width = 0.0
+radius = [
     0.0,
     0.0,
     0.0,
     0.0,
 ]
-border_width = 0.0
 
-[scrollable_hovered_no_mouse_over.border_color]
+[scrollable_hovered_mouse_over.scrollbar.scroller.border.color]
 r = 0.0
 g = 0.0
 b = 0.0
-a = 1.0
+a = 0.0
 
-[scrollable_hovered_no_mouse_over.scroller]
-border_radius = [
-    2.0,
-    2.0,
-    2.0,
-    2.0,
+[scrollable_hovered_no_mouse_over.container.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
 ]
-border_width = 0.0
 
-[scrollable_hovered_no_mouse_over.scroller.color]
+[scrollable_hovered_no_mouse_over.container.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_no_mouse_over.container.shadow]
+blur_radius = 0.0
+
+[scrollable_hovered_no_mouse_over.container.shadow.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_no_mouse_over.container.shadow.offset]
+x = 0.0
+y = 0.0
+
+[scrollable_hovered_no_mouse_over.scrollbar.border]
+width = 0.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[scrollable_hovered_no_mouse_over.scrollbar.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
+
+[scrollable_hovered_no_mouse_over.scrollbar.scroller.color]
 r = 0.73
 g = 0.76
 b = 0.90
 a = 1.0
 
-[scrollable_hovered_no_mouse_over.scroller.border_color]
-r = 0.0
-g = 0.0
-b = 0.0
-a = 1.0
-
-[pick_list_active]
-border_radius = [
+[scrollable_hovered_no_mouse_over.scrollbar.scroller.border]
+width = 0.0
+radius = [
     0.0,
     0.0,
     0.0,
     0.0,
 ]
-border_width = 1.0
+
+[scrollable_hovered_no_mouse_over.scrollbar.scroller.border.color]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.0
 
 [pick_list_active.text_color]
 r = 0.73
@@ -1015,7 +1211,7 @@ a = 1.0
 r = 0.0
 g = 0.0
 b = 0.0
-a = 1.0
+a = 0.0
 
 [pick_list_active.handle_color]
 r = 1.0
@@ -1029,20 +1225,20 @@ g = 0.20
 b = 0.27
 a = 1.0
 
-[pick_list_active.border_color]
-r = 0.73
-g = 0.76
-b = 0.90
-a = 1.0
-
-[pick_list_hovered]
-border_radius = [
+[pick_list_active.border]
+width = 1.0
+radius = [
     0.0,
     0.0,
     0.0,
     0.0,
 ]
-border_width = 1.0
+
+[pick_list_active.border.color]
+r = 0.73
+g = 0.76
+b = 0.90
+a = 1.0
 
 [pick_list_hovered.text_color]
 r = 0.73
@@ -1054,7 +1250,7 @@ a = 1.0
 r = 0.0
 g = 0.0
 b = 0.0
-a = 1.0
+a = 0.0
 
 [pick_list_hovered.handle_color]
 r = 1.0
@@ -1068,20 +1264,20 @@ g = 0.20
 b = 0.27
 a = 1.0
 
-[pick_list_hovered.border_color]
-r = 0.73
-g = 0.76
-b = 0.90
-a = 1.0
-
-[overlay_menu]
-border_width = 1.0
-border_radius = [
+[pick_list_hovered.border]
+width = 1.0
+radius = [
     0.0,
     0.0,
     0.0,
     0.0,
 ]
+
+[pick_list_hovered.border.color]
+r = 0.73
+g = 0.76
+b = 0.90
+a = 1.0
 
 [overlay_menu.text_color]
 r = 0.73
@@ -1095,7 +1291,16 @@ g = 0.20
 b = 0.27
 a = 1.0
 
-[overlay_menu.border_color]
+[overlay_menu.border]
+width = 1.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[overlay_menu.border.color]
 r = 0.73
 g = 0.76
 b = 0.90
@@ -1113,35 +1318,26 @@ g = 0.67
 b = 1.0
 a = 1.0
 
-[text_editor_active]
-border_radius = [
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-]
-border_width = 1.0
-
 [text_editor_active.background.Color]
 r = 0.19
 g = 0.20
 b = 0.27
 a = 1.0
 
-[text_editor_active.border_color]
-r = 0.73
-g = 0.76
-b = 0.90
-a = 1.0
-
-[text_editor_focused]
-border_radius = [
+[text_editor_active.border]
+width = 1.0
+radius = [
     0.0,
     0.0,
     0.0,
     0.0,
 ]
-border_width = 1.0
+
+[text_editor_active.border.color]
+r = 0.73
+g = 0.76
+b = 0.90
+a = 1.0
 
 [text_editor_focused.background.Color]
 r = 0.19
@@ -1149,20 +1345,20 @@ g = 0.20
 b = 0.27
 a = 1.0
 
-[text_editor_focused.border_color]
-r = 0.73
-g = 0.76
-b = 0.90
-a = 1.0
-
-[text_editor_disabled]
-border_radius = [
+[text_editor_focused.border]
+width = 1.0
+radius = [
     0.0,
     0.0,
     0.0,
     0.0,
 ]
-border_width = 1.0
+
+[text_editor_focused.border.color]
+r = 0.73
+g = 0.76
+b = 0.90
+a = 1.0
 
 [text_editor_disabled.background.Color]
 r = 0.19
@@ -1170,7 +1366,16 @@ g = 0.20
 b = 0.27
 a = 1.0
 
-[text_editor_disabled.border_color]
+[text_editor_disabled.border]
+width = 1.0
+radius = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]
+
+[text_editor_disabled.border.color]
 r = 0.73
 g = 0.76
 b = 0.90

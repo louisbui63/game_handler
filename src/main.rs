@@ -343,7 +343,7 @@ impl Application for MainGUI {
             Message::RunSelected => {
                 if let Some(i) = self.selected {
                     self.games[i].current_log.clear();
-                    self.games[i].time_started = Some(std::time::Instant::now());
+                    self.games[i].time_started = Some(std::time::SystemTime::now());
                     self.games[i].run();
                     if self.games[i].config.no_sleep_enabled {
                         match nosleep::NoSleep::new() {
@@ -661,9 +661,12 @@ impl Application for MainGUI {
             }
             Message::ProcessDied(i) => {
                 if let Some(when) = self.games[i].time_started {
-                    self.games[i].time_played += std::time::Instant::now().duration_since(when);
-                    self.games[i].time_played_this_year +=
-                        std::time::Instant::now().duration_since(when);
+                    self.games[i].time_played += std::time::SystemTime::now()
+                        .duration_since(when)
+                        .unwrap_or_default();
+                    self.games[i].time_played_this_year += std::time::SystemTime::now()
+                        .duration_since(when)
+                        .unwrap_or_default();
                     self.time_played_db.insert(
                         self.games[i]
                             .path_to_toml
