@@ -695,6 +695,15 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
                             .into(),
                         )
                     }
+                    let grid: iced::Element<_> = if let crate::SGDBAsyncStatus::NoImage =
+                        mg.sgdb_async_status
+                    {
+                        iced::widget::text("There is no available grid for this game.").into()
+                    } else if let crate::SGDBAsyncStatus::ImageDownload(_) = mg.sgdb_async_status {
+                        iced::widget::column![iced::widget::text("Loading images..."), grid].into()
+                    } else {
+                        grid.into()
+                    };
 
                     iced::widget::scrollable(column![
                         iced::widget::Column::with_children(query),
@@ -706,6 +715,23 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
                                 .on_press(Message::ApplySGDB),
                         ]
                     ])
+                })
+                .style(|theme: &Theme, _status| {
+                    let palette = theme.extended_palette();
+                    let color = palette.primary.strong.color;
+                    let text_color = palette.primary.strong.text;
+                    let foreground = theme.palette();
+
+                    iced_aw::widget::card::Style {
+                        border_color: color,
+                        head_background: color.into(),
+                        head_text_color: text_color,
+                        close_color: text_color,
+                        background: palette.background.base.color.into(),
+                        body_text_color: foreground.text,
+                        foot_text_color: foreground.text,
+                        ..iced_aw::widget::card::Style::default()
+                    }
                 })
                 .height(Length::FillPortion(10)),
                 iced::widget::Space::with_height(Length::FillPortion(1)),

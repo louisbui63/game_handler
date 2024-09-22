@@ -188,6 +188,7 @@ enum SGDBAsyncStatus {
     ImageQuery(usize),
     ImageDownload(Vec<steamgriddb_api::images::Image>),
     FinalImageDownload(steamgriddb_api::images::Image),
+    NoImage,
 }
 impl std::default::Default for SGDBAsyncStatus {
     fn default() -> Self {
@@ -238,6 +239,7 @@ pub enum Message {
     ProcessDied(usize),
     ProcessWatcherClock,
     LogAction(iced::widget::text_editor::Action),
+    SGDBAsyncNoImage,
 }
 
 impl MainGUI {
@@ -639,6 +641,10 @@ impl MainGUI {
                 }
                 Command::none()
             }
+            Message::SGDBAsyncNoImage => {
+                self.sgdb_async_status = SGDBAsyncStatus::NoImage;
+                Command::none()
+            }
             Message::DoNothing => {
                 //yep, you guessed it, we do nothing here
                 Command::none()
@@ -713,7 +719,7 @@ impl MainGUI {
 
     fn subscription(&self) -> iced::Subscription<Message> {
         let sgdb_async = match &self.sgdb_async_status {
-            SGDBAsyncStatus::Nothing => iced::Subscription::none(),
+            SGDBAsyncStatus::Nothing | SGDBAsyncStatus::NoImage => iced::Subscription::none(),
             SGDBAsyncStatus::SearchQuery(q) => {
                 let api_key = self
                     .default_config
@@ -755,45 +761,54 @@ impl MainGUI {
                             use steamgriddb_api::Client;
                             let client = Client::new(api_key);
                             let images = client.get_images_for_id(
-                            id,
-                            &steamgriddb_api::QueryType::Grid(Some(
-                                steamgriddb_api::query_parameters::GridQueryParameters {
-                                    dimentions: Some(&[
-                                        steamgriddb_api::query_parameters::GridDimentions::D600x900,
-                                    ]),
-                                    ..std::default::Default::default()
-                                },
-                            )),
-                        ).await
-                        .unwrap_or_else(|_| vec![]);
+                                id,
+                                &steamgriddb_api::QueryType::Grid(Some(
+                                    steamgriddb_api::query_parameters::GridQueryParameters {
+                                        dimentions: Some(&[
+                                            steamgriddb_api::query_parameters::GridDimentions::D600x900,
+                                        ]),
+                                        ..std::default::Default::default()
+                                    },
+                                )),
+                            ).await
+                            .unwrap_or_else(|_| vec![]);
 
-                            Some((Message::SGDBAsyncImageQueryStart(images), id))
+                            if images.is_empty() {
+                                Some((Message::SGDBAsyncNoImage, id))
+                            } else {
+                                Some((Message::SGDBAsyncImageQueryStart(images), id))
+                            }
                         }
                     }),
                 )
             }
             SGDBAsyncStatus::ImageDownload(images) => {
-                let image = images.last().unwrap();
-                iced::Subscription::run_with_id(
-                    image.id,
-                    iced::futures::stream::unfold(image.clone(), move |image| async move {
-                        let im = if let Ok(resp) = reqwest::get(image.thumb.clone()).await {
-                            if resp.status() == reqwest::StatusCode::OK {
-                                Some((
-                                    image.clone(),
-                                    image::load_from_memory(&resp.bytes().await.unwrap())
-                                        .unwrap()
-                                        .to_rgba8(),
-                                ))
+                if let Some(image) = images.last() {
+                    iced::Subscription::run_with_id(
+                        image.id,
+                        iced::futures::stream::unfold(image.clone(), move |image| async move {
+                            let im = if let Ok(resp) = reqwest::get(image.thumb.clone()).await {
+                                if resp.status() == reqwest::StatusCode::OK {
+                                    if let Ok(u) = resp.bytes().await {
+                                        Some((
+                                            image.clone(),
+                                            image::load_from_memory(&u).unwrap().to_rgba8(),
+                                        ))
+                                    } else {
+                                        None
+                                    }
+                                } else {
+                                    None
+                                }
                             } else {
                                 None
-                            }
-                        } else {
-                            None
-                        };
-                        Some((Message::SGDBAsyncImageDownloadProgress(im), image))
-                    }),
-                )
+                            };
+                            Some((Message::SGDBAsyncImageDownloadProgress(im), image))
+                        }),
+                    )
+                } else {
+                    iced::Subscription::none()
+                }
             }
             SGDBAsyncStatus::FinalImageDownload(image) => iced::Subscription::run_with_id(
                 image.id,
