@@ -17,7 +17,7 @@ impl Runner for Rpcs3Runner {
         }
     }
     fn get_subcommands(&self) -> Vec<String> {
-        return vec!["rpcs3".to_owned()];
+        vec!["rpcs3".to_owned()]
     }
     fn get_subcommand_command(&self, command: String) -> Option<Command> {
         match &command[..] {

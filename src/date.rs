@@ -7,7 +7,7 @@ pub struct Date {
 impl std::fmt::Display for Date {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(y) = self.year {
-            if let Some(m) = self.year {
+            if let Some(m) = self.month {
                 let m = match m {
                     1 => "January",
                     2 => "February",

@@ -24,7 +24,7 @@ impl Runner for MameRunner {
         }
     }
     fn get_subcommands(&self) -> Vec<String> {
-        return vec!["MAME".to_owned()];
+        vec!["MAME".to_owned()]
     }
     fn get_subcommand_command(&self, command: String) -> Option<Command> {
         match &command[..] {

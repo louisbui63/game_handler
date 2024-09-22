@@ -25,7 +25,7 @@ impl Runner for Pcsx2Runner {
         }
     }
     fn get_subcommands(&self) -> Vec<String> {
-        return vec!["pcsx2".to_owned()];
+        vec!["pcsx2".to_owned()]
     }
     fn get_subcommand_command(&self, command: String) -> Option<Command> {
         match &command[..] {

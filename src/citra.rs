@@ -1,6 +1,6 @@
 use crate::games::*;
 
-/// runner for Nintendo 3DS games via Citra emulator
+/// runner for Nintendo 3DS games via Citra emulator. Should work with modern forks too.
 #[derive(Debug, Clone)]
 pub struct CitraRunner {
     pub path: String,
@@ -22,7 +22,7 @@ impl Runner for CitraRunner {
         }
     }
     fn get_subcommands(&self) -> Vec<String> {
-        return vec!["citra".to_owned()];
+        vec!["citra".to_owned()]
     }
     fn get_subcommand_command(&self, command: String) -> Option<Command> {
         match &command[..] {

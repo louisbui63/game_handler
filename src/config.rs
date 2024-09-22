@@ -509,7 +509,7 @@ impl Cfg {
         Cfg(out)
     }
     pub fn from_toml(path: &std::path::Path) -> Self {
-        let toml = std::fs::read_to_string(path).unwrap_or(String::new());
+        let toml = std::fs::read_to_string(path).unwrap_or_default();
         let value = toml::Value::from_str(&toml[..]).unwrap();
         let tot = value.as_table().unwrap();
 
@@ -577,7 +577,7 @@ impl Cfg {
         let Self(s) = self;
         s.get(key).unwrap_or(&default.get(key).unwrap().1).clone()
     }
-    pub fn to_game(
+    pub fn into_game(
         self,
         default: &std::path::Path,
         toml: std::path::PathBuf,
@@ -728,7 +728,7 @@ impl Cfg {
             // process_reader: None,
             no_sleep: None,
 
-            time_played: play_time_db
+            time_played: *play_time_db
                 .get(
                     &toml
                         .file_name()
@@ -737,9 +737,8 @@ impl Cfg {
                         .unwrap_or_default()
                         .to_owned(),
                 )
-                .unwrap_or(&std::time::Duration::from_secs(0))
-                .clone(),
-            time_played_this_year: play_time_ty_db
+                .unwrap_or(&std::time::Duration::from_secs(0)),
+            time_played_this_year: *play_time_ty_db
                 .get(
                     &toml
                         .file_name()
@@ -748,8 +747,7 @@ impl Cfg {
                         .unwrap_or_default()
                         .to_owned(),
                 )
-                .unwrap_or(&std::time::Duration::from_secs(0))
-                .clone(),
+                .unwrap_or(&std::time::Duration::from_secs(0)),
             time_started: None,
 
             is_running: false,

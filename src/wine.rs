@@ -26,6 +26,7 @@ impl Runner for WineRunner {
             "Wine Control Panel".to_owned(),
             "winecfg".to_owned(),
             "cmd".to_owned(),
+            "pkill wineserver".to_owned(),
         ]
     }
     fn get_subcommand_command(&self, command: String) -> Option<Command> {
@@ -33,6 +34,12 @@ impl Runner for WineRunner {
             "Wine Control Panel" => Some(self.real_get_command(Some("control".to_owned()))),
             "winecfg" => Some(self.real_get_command(Some("winecfg".to_owned()))),
             "cmd" => Some(self.real_get_command(Some("cmd".to_owned()))),
+            "pkill wineserver" => Some(Command {
+                program: "pkill".to_owned(),
+                cwd: None,
+                args: vec!["wineserver".to_owned()],
+                envs: std::collections::HashMap::new(),
+            }),
             _ => None,
         }
     }
@@ -218,7 +225,7 @@ impl WineRunner {
         }
 
         let mut envs = std::collections::HashMap::new();
-        if dlloverrides.len() != 0 {
+        if !dlloverrides.is_empty() {
             envs.insert("WINEDLLOVERRIDES".to_owned(), dlloverrides.join(";"));
         }
         if self.use_dxvk_nvapi {
@@ -243,6 +250,35 @@ impl WineRunner {
         }
         envs.insert("WINE_LARGE_ADDRESS_AWARE".to_owned(), "1".to_owned());
 
+        if let Some(Some(p)) = std::path::Path::new(&self.path_to_wine)
+            .parent()
+            .map(|a| a.parent())
+        {
+            let mut ld_path = String::new();
+            let p1 = p.join("lib");
+            if p1.exists() {
+                if !ld_path.is_empty() {
+                    ld_path.push(';')
+                }
+                ld_path += p1.to_str().unwrap_or("");
+            }
+            let p2 = p.join("lib32");
+            if p2.exists() {
+                if !ld_path.is_empty() {
+                    ld_path.push(';')
+                }
+                ld_path += p2.to_str().unwrap_or("");
+            }
+            let p3 = p.join("lib64");
+            if p3.exists() {
+                if !ld_path.is_empty() {
+                    ld_path.push(';')
+                }
+                ld_path += p3.to_str().unwrap_or("");
+            }
+        }
+        // envs.insert("GST_PLUGIN_SYSTEM_PATH_1_0".to_owned(), )
+
         Command {
             program: self.path_to_wine.clone(),
             args: if let Some(a) = command_override {
@@ -253,10 +289,11 @@ impl WineRunner {
                 a
             },
             envs,
-            cwd: std::path::PathBuf::try_from(self.path.clone())
-                .ok()
-                .map(|a| a.parent().map(|a| a.to_owned()))
-                .unwrap_or(None),
+            cwd: std::path::PathBuf::from(self.path.clone())
+                .parent()
+                .map(|a| a.to_owned()), // .ok()
+                                        // .map(|a| a.parent().map(|a| a.to_owned()))
+                                        // .unwrap_or(None),
         }
     }
 }

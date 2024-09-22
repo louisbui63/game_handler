@@ -17,7 +17,7 @@ impl Runner for RyujinxRunner {
         }
     }
     fn get_subcommands(&self) -> Vec<String> {
-        return vec!["ryujinx".to_owned()];
+        vec!["ryujinx".to_owned()]
     }
     fn get_subcommand_command(&self, command: String) -> Option<Command> {
         match &command[..] {

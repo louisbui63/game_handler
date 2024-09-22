@@ -16,7 +16,7 @@ impl Runner for SteamRunner {
         }
     }
     fn get_subcommands(&self) -> Vec<String> {
-        return vec!["steam".to_owned()];
+        vec!["steam".to_owned()]
     }
     fn get_subcommand_command(&self, command: String) -> Option<Command> {
         match &command[..] {

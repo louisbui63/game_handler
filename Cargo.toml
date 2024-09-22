@@ -6,9 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-iced = {path="iced", features=["image", "tokio", "advanced"]}
+iced = {path="iced", features=["image", "tokio", "advanced", "wgpu"]}
+# iced = {path="iced", default-features = false, features=["image", "tokio", "advanced"]}
 # iced = {git = "https://github.com/louisbui63/iced", features=["image", "tokio", "advanced"]}
-iced_aw = {path="iced_aw", features=["tab_bar", "modal", "card", "old_grid","icons"]}
+iced_aw = {path="iced_aw", features=["tab_bar", "card", "old_grid"]}
+iced_fonts = {path="iced_fonts", features=["nerd"]}
 # iced_aw = {git = "https://github.com/louisbui63/iced_aw", features=["icon_text", "tab_bar", "modal", "card"]}
 image = "0.24.5"
 toml = "0.7.6"

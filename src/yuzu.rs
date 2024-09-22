@@ -1,6 +1,6 @@
 use crate::games::*;
 
-/// runner for Nintendo Switch games via Ryujinx emulator
+/// runner for Nintendo Switch games via Yuzu emulator. Should work with Suyu and other forks too.
 #[derive(Debug, Clone)]
 pub struct YuzuRunner {
     pub path: String,
@@ -22,7 +22,7 @@ impl Runner for YuzuRunner {
         }
     }
     fn get_subcommands(&self) -> Vec<String> {
-        return vec!["yuzu".to_owned()];
+        vec!["yuzu".to_owned()]
     }
     fn get_subcommand_command(&self, command: String) -> Option<Command> {
         match &command[..] {

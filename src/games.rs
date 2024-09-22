@@ -80,7 +80,7 @@ impl Command {
                 .insert("__VK_LAYER_NV_optimus".to_owned(), "NVIDIA_only".to_owned());
             if cfg.gamescope {
                 if let Ok(pci) = std::process::Command::new("sh")
-                    .args(&[
+                    .args([
                         "-c",
                         "lspci -nn | grep -e VGA -e 3D | grep NVIDIA | cut -d ']' -f 3 | cut -c 3-",
                     ])
@@ -125,11 +125,9 @@ impl Command {
             self.envs.insert(k.to_owned(), v.to_owned());
         }
         #[cfg(unix)]
-        if cfg.gamemode {
-            if !self.envs.contains_key("LD_PRELOAD") {
-                self.envs
-                    .insert("LD_PRELOAD".to_owned(), "libgamemodeauto.so.0".to_owned());
-            }
+        if cfg.gamemode && !self.envs.contains_key("LD_PRELOAD") {
+            self.envs
+                .insert("LD_PRELOAD".to_owned(), "libgamemodeauto.so.0".to_owned());
         }
     }
 }
@@ -180,11 +178,11 @@ pub struct Game {
 impl Game {
     pub fn from_toml(
         path: &std::path::PathBuf,
-        default: &std::path::PathBuf,
+        default: &std::path::Path,
         play_time_db: &HashMap<String, std::time::Duration>,
         play_time_ty_db: &HashMap<String, std::time::Duration>,
     ) -> Self {
-        crate::config::Cfg::from_toml(path).to_game(
+        crate::config::Cfg::from_toml(path).into_game(
             default,
             path.to_owned(),
             play_time_db,

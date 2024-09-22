@@ -21,9 +21,10 @@ use std::collections::HashMap;
 
 use config::{get_default_config_with_vals, CValue, Cfg};
 use games::Game;
-use iced::executor;
+use iced::color;
 use iced::futures::channel::mpsc::Sender;
-use iced::{Application, Command, Settings};
+use iced::theme::Palette;
+use iced::Task as Command;
 
 pub const WIDGET_HEIGHT: u16 = 31;
 pub const IMAGE_WIDTH: u32 = 200;
@@ -68,34 +69,34 @@ fn main() -> iced::Result {
         panic!()
     }
 
-    log::info!("Loading theme");
-    let file = if let Ok(ct) = std::fs::read_to_string(DIRS.data_dir().join("theme.toml")) {
-        ct
-    } else {
-        String::new()
-    };
+    // log::info!("Loading theme");
+    // let file = if let Ok(ct) = std::fs::read_to_string(DIRS.data_dir().join("theme.toml")) {
+    //     ct
+    // } else {
+    //     String::new()
+    // };
 
-    if std::env::args().nth(1).unwrap_or(String::new()) == "--dump-default-theme".to_string() {
-        println!(
-            "{}",
-            toml::to_string_pretty(&crate::theme::CurrentTheme::default()).unwrap()
-        );
-        panic!("Error: Success");
-    }
+    // if std::env::args().nth(1).unwrap_or(String::new()) == "--dump-default-theme".to_string() {
+    //     println!(
+    //         "{}",
+    //         toml::to_string_pretty(&crate::theme::CurrentTheme::default()).unwrap()
+    //     );
+    //     panic!("Error: Success");
+    // }
 
-    *crate::theme::CURRENT_THEME.lock().unwrap() = toml::from_str(&file[..])
-        .unwrap_or_else(|_| {
-            log::error!("Theme file \"%data_dir%/theme.toml\" not found or wrongly formatted : defaulting to embedded theme.");
-            toml::from_str(theme::EMBEDDED_THEME).unwrap()});
+    // *crate::theme::CURRENT_THEME.lock().unwrap() = toml::from_str(&file[..])
+    //     .unwrap_or_else(|_| {
+    //         log::error!("Theme file \"%data_dir%/theme.toml\" not found or wrongly formatted : defaulting to embedded theme.");
+    //         toml::from_str(theme::EMBEDDED_THEME).unwrap()});
 
     log::info!("UI starting");
-    MainGUI::run(Settings {
-        window: iced::window::Settings {
-            exit_on_close_request: true,
-            ..Default::default()
-        },
-        ..Default::default()
-    })
+    // MainGUI::run(Settings {
+    //     ..Default::default()
+    // })
+    iced::application("game_handler", MainGUI::update, MainGUI::view)
+        .subscription(MainGUI::subscription)
+        .theme(MainGUI::theme)
+        .run_with(MainGUI::new)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -141,7 +142,7 @@ pub struct MainGUI {
     time_played_db: HashMap<String, std::time::Duration>,
     time_played_ty_db: HashMap<String, std::time::Duration>,
     sort_alg: sort::Sorts,
-    log: iced::widget::text_editor::Content<crate::theme::widget::Renderer>,
+    log: iced::widget::text_editor::Content,
 }
 
 impl MainGUI {
@@ -239,13 +240,13 @@ pub enum Message {
     LogAction(iced::widget::text_editor::Action),
 }
 
-impl Application for MainGUI {
-    type Message = Message;
-    type Theme = crate::theme::Theme;
-    type Executor = executor::Default;
-    type Flags = ();
+impl MainGUI {
+    // type Message = Message;
+    // type Theme = crate::theme::Theme;
+    // type Executor = executor::Default;
+    // type Flags = ();
 
-    fn new(_flags: Self::Flags) -> (Self, Command<Message>) {
+    fn new() -> (Self, Command<Message>) {
         let mut time_played_db = HashMap::new();
         let mut time_played_ty_db = HashMap::new();
         std::fs::read_to_string(DIRS.data_dir().join("times.toml"))
@@ -324,7 +325,7 @@ impl Application for MainGUI {
                 sort_alg: sort::Sorts::Name,
                 log: iced::widget::text_editor::Content::new(),
             },
-            iced::font::load(iced_aw::core::icons::NERD_FONT_BYTES).map(|_| Message::DoNothing),
+            iced::font::load(iced_fonts::NERD_FONT_BYTES).map(|_| Message::DoNothing),
             // Command::none(),
         )
     }
@@ -395,7 +396,7 @@ impl Application for MainGUI {
                     GridStatus::GamesSettings => {
                         let path = self.games[self.selected.unwrap()].path_to_toml.clone();
                         self.games[self.selected.unwrap()] =
-                            self.temp_settings.as_ref().unwrap().clone().to_game(
+                            self.temp_settings.as_ref().unwrap().clone().into_game(
                                 &DIRS.config_dir().join("settings.toml"),
                                 path.clone(),
                                 &self.time_played_db,
@@ -428,7 +429,7 @@ impl Application for MainGUI {
                         );
 
                         for i in 0..self.games.len() {
-                            self.games[i] = self.games[i].bare_config.clone().to_game(
+                            self.games[i] = self.games[i].bare_config.clone().into_game(
                                 &DIRS.config_dir().join("settings.toml"),
                                 self.games[i].path_to_toml.clone(),
                                 &self.time_played_db,
@@ -445,14 +446,14 @@ impl Application for MainGUI {
                                 .0
                                 .get("name")
                                 .map(|a| a.as_string())
-                                .unwrap_or(String::new()),
+                                .unwrap_or_default(),
                         );
                         let path = DIRS
                             .config_dir()
                             .join("games")
                             .join(random_id.to_string() + &name[..] + ".toml");
                         let cfg = self.temp_settings.as_mut().unwrap();
-                        self.games.push(cfg.clone().to_game(
+                        self.games.push(cfg.clone().into_game(
                             &DIRS.config_dir().join("settings.toml"),
                             path.clone(),
                             &self.time_played_db,
@@ -606,9 +607,8 @@ impl Application for MainGUI {
                 Command::none()
             }
             Message::SGDBAsyncImageQueryStart(images) => {
-                self.sgdb_async_status = SGDBAsyncStatus::ImageDownload(
-                    images.iter().rev().map(|a| a.clone()).collect(),
-                );
+                self.sgdb_async_status =
+                    SGDBAsyncStatus::ImageDownload(images.iter().rev().cloned().collect());
                 self.sgdb_images.clear();
                 Command::none()
             }
@@ -618,7 +618,7 @@ impl Application for MainGUI {
                 }
                 if let SGDBAsyncStatus::ImageDownload(images) = &mut self.sgdb_async_status {
                     let _ = images.pop();
-                    if images.len() == 0 {
+                    if images.is_empty() {
                         self.sgdb_async_status = SGDBAsyncStatus::Nothing;
                     }
                 }
@@ -661,12 +661,20 @@ impl Application for MainGUI {
             }
             Message::ProcessDied(i) => {
                 if let Some(when) = self.games[i].time_started {
+                    log::info!(
+                        "process {i} died: previous playtime: {:?}",
+                        self.games[i].time_played
+                    );
                     self.games[i].time_played += std::time::SystemTime::now()
                         .duration_since(when)
-                        .unwrap_or_default();
+                        .unwrap_or(std::time::Duration::new(0, 0));
+                    log::info!(
+                        "process {i} died: new playtime: {:?}",
+                        self.games[i].time_played
+                    );
                     self.games[i].time_played_this_year += std::time::SystemTime::now()
                         .duration_since(when)
-                        .unwrap_or_default();
+                        .unwrap_or(std::time::Duration::new(0, 0));
                     self.time_played_db.insert(
                         self.games[i]
                             .path_to_toml
@@ -677,7 +685,10 @@ impl Application for MainGUI {
                             .to_owned(),
                         self.games[i].time_played,
                     );
+                    self.games[i].time_started = None;
                     self.update_db();
+                } else {
+                    log::info!("process {i} died: no playtime added")
                 }
                 self.games[i].no_sleep = None;
                 self.games[i].psub_sender = None;
@@ -694,15 +705,15 @@ impl Application for MainGUI {
         }
     }
 
-    fn view(&self) -> iced::Element<'_, Message, theme::Theme, iced::Renderer> {
+    fn view(&self) -> iced::Element<'_, Message> {
         let MainGUI { .. } = self;
 
         ui::get_view_widget(self)
     }
 
-    fn subscription(&self) -> iced::Subscription<Self::Message> {
+    fn subscription(&self) -> iced::Subscription<Message> {
         let sgdb_async = match &self.sgdb_async_status {
-            SGDBAsyncStatus::Nothing => iced::subscription::Subscription::none(),
+            SGDBAsyncStatus::Nothing => iced::Subscription::none(),
             SGDBAsyncStatus::SearchQuery(q) => {
                 let api_key = self
                     .default_config
@@ -710,21 +721,24 @@ impl Application for MainGUI {
                     .unwrap()
                     .1
                     .as_string();
-                iced::subscription::unfold(q.clone(), q.clone(), move |q| {
-                    let api_key = api_key.clone();
-                    async move {
-                        use steamgriddb_api::Client;
-                        let client = Client::new(api_key);
-                        let out = client.search(&q[..]).await;
-                        (
-                            Message::SGDBAsyncSearchQueryDone(out.unwrap_or_else(|e| {
-                                log::error!("error in SGDB search query : {e}");
-                                Vec::new()
-                            })),
-                            q.clone(),
-                        )
-                    }
-                })
+                iced::Subscription::run_with_id(
+                    q.clone(),
+                    iced::futures::stream::unfold(q.clone(), move |q| {
+                        let api_key = api_key.clone();
+                        async move {
+                            use steamgriddb_api::Client;
+                            let client = Client::new(api_key);
+                            let out = client.search(&q[..]).await;
+                            Some((
+                                Message::SGDBAsyncSearchQueryDone(out.unwrap_or_else(|e| {
+                                    log::error!("error in SGDB search query : {e}");
+                                    Vec::new()
+                                })),
+                                q.clone(),
+                            ))
+                        }
+                    }),
+                )
             }
             SGDBAsyncStatus::ImageQuery(id) => {
                 let api_key = self
@@ -733,12 +747,14 @@ impl Application for MainGUI {
                     .unwrap()
                     .1
                     .as_string();
-                iced::subscription::unfold(id.clone(), id.clone(), move |id| {
-                    let api_key = api_key.clone();
-                    async move {
-                        use steamgriddb_api::Client;
-                        let client = Client::new(api_key);
-                        let images = client.get_images_for_id(
+                iced::Subscription::run_with_id(
+                    *id,
+                    iced::futures::stream::unfold(*id, move |id| {
+                        let api_key = api_key.clone();
+                        async move {
+                            use steamgriddb_api::Client;
+                            let client = Client::new(api_key);
+                            let images = client.get_images_for_id(
                             id,
                             &steamgriddb_api::QueryType::Grid(Some(
                                 steamgriddb_api::query_parameters::GridQueryParameters {
@@ -751,32 +767,37 @@ impl Application for MainGUI {
                         ).await
                         .unwrap_or_else(|_| vec![]);
 
-                        (Message::SGDBAsyncImageQueryStart(images), id)
-                    }
-                })
+                            Some((Message::SGDBAsyncImageQueryStart(images), id))
+                        }
+                    }),
+                )
             }
             SGDBAsyncStatus::ImageDownload(images) => {
                 let image = images.last().unwrap();
-                iced::subscription::unfold(image.id, image.clone(), move |image| async move {
-                    let im = if let Ok(resp) = reqwest::get(image.thumb.clone()).await {
-                        if resp.status() == reqwest::StatusCode::OK {
-                            Some((
-                                image.clone(),
-                                image::load_from_memory(&resp.bytes().await.unwrap())
-                                    .unwrap()
-                                    .to_rgba8(),
-                            ))
+                iced::Subscription::run_with_id(
+                    image.id,
+                    iced::futures::stream::unfold(image.clone(), move |image| async move {
+                        let im = if let Ok(resp) = reqwest::get(image.thumb.clone()).await {
+                            if resp.status() == reqwest::StatusCode::OK {
+                                Some((
+                                    image.clone(),
+                                    image::load_from_memory(&resp.bytes().await.unwrap())
+                                        .unwrap()
+                                        .to_rgba8(),
+                                ))
+                            } else {
+                                None
+                            }
                         } else {
                             None
-                        }
-                    } else {
-                        None
-                    };
-                    (Message::SGDBAsyncImageDownloadProgress(im), image)
-                })
+                        };
+                        Some((Message::SGDBAsyncImageDownloadProgress(im), image))
+                    }),
+                )
             }
-            SGDBAsyncStatus::FinalImageDownload(image) => {
-                iced::subscription::unfold(image.id, image.clone(), move |image| async move {
+            SGDBAsyncStatus::FinalImageDownload(image) => iced::Subscription::run_with_id(
+                image.id,
+                iced::futures::stream::unfold(image.clone(), move |image| async move {
                     let url = image.clone().url;
                     let name = image.clone().id.to_string()
                         + match image.clone().mime {
@@ -804,9 +825,9 @@ impl Application for MainGUI {
                         None
                     };
 
-                    (Message::SGDBAsyncFinalImageDownloadDone(path), image)
-                })
-            }
+                    Some((Message::SGDBAsyncFinalImageDownloadDone(path), image))
+                }),
+            ),
         };
         let mono_clock = iced::time::every(iced::time::Duration::from_millis(
             if let GridStatus::Logs = self.grid_status {
@@ -832,11 +853,28 @@ impl Application for MainGUI {
         }
         running_processes.push(mono_clock);
         running_processes.push(sgdb_async);
-        iced::subscription::Subscription::batch(running_processes)
+        iced::Subscription::batch(running_processes)
     }
 
-    fn theme(&self) -> theme::Theme {
-        theme::Theme
+    fn theme(&self) -> iced::Theme {
+        iced::theme::Theme::custom_with_fn(
+            // So here we should really invert primary strong and primary base (somehow)
+            "that cute pink theme".to_owned(),
+            Palette {
+                background: color!(0x303446), // Base
+                text: color!(0xc6d0f5),       // Text
+                primary: color!(0xFFABFF),    // Not Blue
+                success: color!(0xa6d189),    // Green
+                danger: color!(0xe78284),     // Red
+            },
+            |pal| {
+                let mut out = iced::theme::palette::Extended::generate(pal);
+                out.primary.strong.color = out.primary.base.color;
+                out.primary.base.color = mul_color(out.primary.base.color, 4. / 5.);
+
+                out
+            },
+        )
     }
 }
 
@@ -856,4 +894,13 @@ fn duration_to_string(dur: std::time::Duration) -> String {
     let mins = dur.as_secs() / 60;
     let hours = mins / 60;
     format!("{} hours {} minutes", hours, mins - hours * 60)
+}
+
+fn mul_color(c: iced::Color, mul: f32) -> iced::Color {
+    iced::Color {
+        r: c.r * mul,
+        g: c.g * mul,
+        b: c.b * mul,
+        a: c.a,
+    }
 }
