@@ -657,7 +657,7 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
                             .on_press(Message::SGDBThumbSelected(i))
                             .style(move |theme: &Theme, status| {
                                 let palette = theme.extended_palette();
-                                if Some(i) != mg.selected {
+                                if Some(i) != mg.sgdb_selected {
                                     if let iced::widget::button::Status::Hovered = status {
                                         let mut out = button::Style::default()
                                             .with_background(palette.background.strong.color);
@@ -713,16 +713,20 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
                         grid.into()
                     };
 
-                    iced::widget::scrollable(column![
-                        iced::widget::Column::with_children(query),
-                        grid,
+                    iced::widget::column![
+                        iced::widget::scrollable(column![
+                            iced::widget::Column::with_children(query),
+                            grid,
+                        ])
+                        .height(Length::FillPortion(15)),
                         row![
                             iced::widget::button(iced::widget::text("Cancel"))
                                 .on_press(Message::CancelSGDB),
                             iced::widget::button(iced::widget::text("Ok"))
                                 .on_press(Message::ApplySGDB),
                         ]
-                    ])
+                        .height(Length::FillPortion(1))
+                    ]
                 })
                 .style(|theme: &Theme, _status| {
                     let palette = theme.extended_palette();
