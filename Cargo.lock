@@ -1541,6 +1541,7 @@ dependencies = [
 name = "game_handler"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "directories",
  "flexi_logger",
  "iced",

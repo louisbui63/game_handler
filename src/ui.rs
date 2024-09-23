@@ -685,12 +685,20 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
                         .into()];
                     for g in mg.sgdb_other_possibilities.iter() {
                         query.push(
-                            iced::widget::button(iced::widget::text(format!(
-                                "{} ({}) -{}",
-                                g.name,
-                                g.release_date.unwrap_or_default(),
-                                g.id,
-                            )))
+                            iced::widget::button(iced::widget::text(
+                                if let Some(d) = g.release_date {
+                                    format!(
+                                        "{} ({}) - {}",
+                                        g.name,
+                                        (chrono::DateTime::UNIX_EPOCH
+                                            + std::time::Duration::from_secs(d as u64))
+                                        .format("%Y"),
+                                        g.id,
+                                    )
+                                } else {
+                                    format!("{} - {}", g.name, g.id,)
+                                },
+                            ))
                             .on_press(Message::SGDBSelectGame(g.id))
                             .into(),
                         )
