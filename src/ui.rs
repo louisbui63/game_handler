@@ -421,8 +421,8 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
         crate::GridStatus::GamesGrid => {
             let image_size = IMAGE_WIDTH as u16;
 
-            let mut grid: iced_aw::OldGrid<Message, _> =
-                iced_aw::OldGrid::with_column_width(image_size as f32 + 20.);
+            let mut grid: crate::grid_widget::Grid<Message, _> =
+                crate::grid_widget::Grid::with_column_width(image_size as f32 + 20.);
             for (i, g) in mg.games.iter().enumerate() {
                 grid.insert::<iced::Element<'_, Message>>(
                     iced::widget::Container::new(

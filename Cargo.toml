@@ -9,7 +9,7 @@ edition = "2021"
 iced = {version="0.13.1", features=["image", "tokio", "advanced", "wgpu"]}
 # iced = {path="iced", default-features = false, features=["image", "tokio", "advanced"]}
 # iced = {git = "https://github.com/louisbui63/iced", features=["image", "tokio", "advanced"]}
-iced_aw = {path="iced_aw", features=["tab_bar", "card", "old_grid"]}
+iced_aw = {version="0.11.0", features=["tab_bar", "card"]}
 iced_fonts = {version="0.1.1", features=["nerd"]}
 # iced_aw = {git = "https://github.com/louisbui63/iced_aw", features=["icon_text", "tab_bar", "modal", "card"]}
 image = "0.24.5"
