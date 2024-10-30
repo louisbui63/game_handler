@@ -638,8 +638,8 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
             column![
                 iced::widget::Space::with_height(Length::FillPortion(1)),
                 iced_aw::Card::new(iced::widget::text("Choose a banner"), {
-                    let mut grid: iced_aw::OldGrid<Message, _> =
-                        iced_aw::OldGrid::with_column_width(IMAGE_WIDTH as f32 + 20.);
+                    let mut grid: crate::grid_widget::Grid<Message, _> =
+                        crate::grid_widget::Grid::with_column_width(IMAGE_WIDTH as f32 + 20.);
                     for (i, im) in mg.sgdb_images.iter().enumerate() {
                         grid.insert::<iced::Element<'_, Message>>(
                             iced::widget::button(

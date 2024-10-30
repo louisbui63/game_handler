@@ -3,6 +3,7 @@ mod config;
 mod date;
 mod duckstation;
 mod games;
+mod grid_widget;
 mod mame;
 mod native;
 mod pcsx2;
