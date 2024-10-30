@@ -1,18 +1,15 @@
 //! A grid whose number of columns automatically matches the space available.
 //! Originally based on the `Grid` widget from iced_aw
 
-use std::any::type_name;
-
 use iced::{
     advanced::{
-        self,
         layout::{Limits, Node},
         mouse::{self, Cursor},
         overlay, renderer,
         widget::{Operation, Tree},
         Clipboard, Layout, Shell, Widget,
     },
-    event, Element, Event, Length, Point, Rectangle, Size, Theme,
+    event, Element, Event, Length, Point, Rectangle, Size,
 };
 
 #[allow(missing_debug_implementations)]
@@ -344,7 +341,7 @@ where
 fn build_grid(
     columns: usize,
     column_aligns: impl Iterator<Item = f32> + Clone,
-    layouts: impl Iterator<Item = Node> + ExactSizeIterator,
+    layouts: impl ExactSizeIterator<Item = Node>,
     grid_width: f32,
 ) -> Node {
     let mut nodes = Vec::with_capacity(layouts.len());
