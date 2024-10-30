@@ -262,6 +262,7 @@ pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
                 vec![
                     "umu:path_to_umu".to_owned(),
                     "umu:path_to_proton".to_owned(),
+                    "umu:gameid".to_owned(),
                 ],
             ),
         ]
@@ -515,6 +516,10 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
                     CValue::PickFolder("".to_owned()),
                 ),
             );
+            out.insert(
+                "umu:gameid".to_owned(),
+                ("gameid".to_owned(), CValue::Str("0".to_owned())),
+            );
         }
 
         out
@@ -753,6 +758,7 @@ impl Cfg {
                 path_to_proton: self
                     .get_or_default("umu:path_to_proton", &default)
                     .as_string(),
+                gameid: self.get_or_default("umu:gameid", &default).as_string(),
             }),
             _ => panic!("unknown runner"),
         };
