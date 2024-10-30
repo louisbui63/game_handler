@@ -1,6 +1,7 @@
 mod citra;
 mod config;
 mod date;
+mod duckstation;
 mod games;
 mod mame;
 mod native;
@@ -12,6 +13,8 @@ mod sort;
 mod steam;
 mod theme;
 mod ui;
+#[cfg(unix)]
+mod umu;
 mod vita3k;
 #[cfg(unix)]
 mod wine;

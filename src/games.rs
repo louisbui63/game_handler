@@ -3,13 +3,34 @@ use std::{collections::HashMap, process::Stdio};
 use crate::process_subscription::PSubInput;
 
 #[cfg(unix)]
-pub const RUNNERS: [&str; 11] = [
-    "dummy", "native", "wine", "ryujinx", "rpcs3", "mame", "pcsx2", "yuzu", "citra", "vita3k",
+pub const RUNNERS: [&str; 13] = [
+    "dummy",
+    "native",
+    "wine",
+    "ryujinx",
+    "rpcs3",
+    "mame",
+    "pcsx2",
+    "yuzu",
+    "citra",
+    "vita3k",
     "steam",
+    "duckstation",
+    "umu",
 ];
 #[cfg(windows)]
-pub const RUNNERS: [&str; 10] = [
-    "dummy", "native", "ryujinx", "rpcs3", "mame", "pcsx2", "yuzu", "citra", "vita3k", "steam",
+pub const RUNNERS: [&str; 11] = [
+    "dummy",
+    "native",
+    "ryujinx",
+    "rpcs3",
+    "mame",
+    "pcsx2",
+    "yuzu",
+    "citra",
+    "vita3k",
+    "steam",
+    "duckstation",
 ];
 
 #[derive(Default, Debug, Clone)]

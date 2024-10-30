@@ -718,7 +718,7 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
                             iced::widget::Column::with_children(query),
                             grid,
                         ])
-                        .height(Length::FillPortion(15)),
+                        .height(Length::FillPortion(16)),
                         row![
                             iced::widget::button(iced::widget::text("Cancel"))
                                 .on_press(Message::CancelSGDB),

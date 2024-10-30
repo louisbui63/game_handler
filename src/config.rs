@@ -4,6 +4,7 @@ use std::{collections::HashMap, str::FromStr};
 use crate::wine::WineRunner;
 use crate::{
     citra::CitraRunner,
+    duckstation::DuckStationRunner,
     games::{DummyRunner, Runner},
     mame::MameRunner,
     native::NativeRunner,
@@ -11,6 +12,7 @@ use crate::{
     rpcs3::Rpcs3Runner,
     ryujinx::RyujinxRunner,
     steam::SteamRunner,
+    umu::UmuRunner,
     vita3k::Vita3kRunner,
     yuzu::YuzuRunner,
 };
@@ -247,6 +249,21 @@ pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
                     "vita3k:fullscreen".to_owned(),
                 ],
             ),
+            (
+                "duckstation:duckstation".to_owned(),
+                vec![
+                    "duckstation:path_to_duckstation".to_owned(),
+                    "duckstation:fullscreen".to_owned(),
+                ],
+            ),
+            #[cfg(unix)]
+            (
+                "umu:umu".to_owned(),
+                vec![
+                    "umu:path_to_umu".to_owned(),
+                    "umu:path_to_proton".to_owned(),
+                ],
+            ),
         ]
     });
 
@@ -474,6 +491,31 @@ pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue
             "vita3k:fullscreen".to_owned(),
             ("fullscreen".to_owned(), CValue::Bool(false)),
         );
+        out.insert(
+            "duckstation:path_to_duckstation".to_owned(),
+            (
+                "path to duckstation".to_owned(),
+                CValue::PickFile("".to_owned()),
+            ),
+        );
+        out.insert(
+            "duckstation:fullscreen".to_owned(),
+            ("fullscreen".to_owned(), CValue::Bool(false)),
+        );
+        #[cfg(unix)]
+        {
+            out.insert(
+                "umu:path_to_umu".to_owned(),
+                ("path to umu".to_owned(), CValue::PickFile("".to_owned())),
+            );
+            out.insert(
+                "umu:path_to_proton".to_owned(),
+                (
+                    "path to proton".to_owned(),
+                    CValue::PickFolder("".to_owned()),
+                ),
+            );
+        }
 
         out
     });
@@ -575,7 +617,17 @@ impl Cfg {
 
     fn get_or_default(&self, key: &str, default: &HashMap<String, (String, CValue)>) -> CValue {
         let Self(s) = self;
-        s.get(key).unwrap_or(&default.get(key).unwrap().1).clone()
+        s.get(key)
+            .unwrap_or(
+                &default
+                    .get(key)
+                    .unwrap_or_else(|| {
+                        log::error!("missing key {}", key);
+                        panic!()
+                    })
+                    .1,
+            )
+            .clone()
     }
     pub fn into_game(
         self,
@@ -684,7 +736,24 @@ impl Cfg {
                     .as_string(),
                 fullscreen: self.get_or_default("vita3k:fullscreen", &default).as_bool(),
             }),
+            "duckstation" => Box::new(DuckStationRunner {
+                path: path.clone(),
+                path_to_duckstation: self
+                    .get_or_default("duckstation:path_to_duckstation", &default)
+                    .as_string(),
+                fullscreen: self
+                    .get_or_default("duckstation:fullscreen", &default)
+                    .as_bool(),
+            }),
             "steam" => Box::new(SteamRunner { path: path.clone() }),
+            #[cfg(unix)]
+            "umu" => Box::new(UmuRunner {
+                path: path.clone(),
+                path_to_umu: self.get_or_default("umu:path_to_umu", &default).as_string(),
+                path_to_proton: self
+                    .get_or_default("umu:path_to_proton", &default)
+                    .as_string(),
+            }),
             _ => panic!("unknown runner"),
         };
 
