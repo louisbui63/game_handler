@@ -72,7 +72,7 @@ impl Command {
         let out = cmd.spawn();
 
         if let Err(e) = out {
-            log::error!("error {e} while running command");
+            log::error!("error {e} while running command {cmd:?}");
             None
         } else {
             let out = out.unwrap();

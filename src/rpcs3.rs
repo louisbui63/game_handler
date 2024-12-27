@@ -9,10 +9,13 @@ pub struct Rpcs3Runner {
 
 impl Runner for Rpcs3Runner {
     fn get_command(&self) -> Command {
+        let mut envs = std::collections::HashMap::new();
+        envs.insert("QT_QPA_PLATFORM".to_owned(), "xcb".to_owned());
+
         Command {
             program: self.path_to_rpcs3.clone(),
             args: vec!["--no-gui".to_owned(), self.path.clone()],
-            envs: std::collections::HashMap::new(),
+            envs,
             cwd: None,
         }
     }
