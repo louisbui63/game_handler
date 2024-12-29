@@ -433,9 +433,9 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
                                     g.image.height(),
                                     g.image.as_raw().clone(),
                                 ))
-                                .filter_method(FilterMethod::Nearest)
-                                // .width(Length::Fixed(image_size as f32))
-                                .height(Length::Fixed(IMAGE_HEIGHT as f32))
+                                .filter_method(FilterMethod::Linear)
+                                .width(Length::Fixed(image_size as f32))
+                                // .height(Length::Fixed(IMAGE_HEIGHT as f32))
                                 .into(),
                                 iced::widget::text(g.name.clone()).into(),
                             ])
