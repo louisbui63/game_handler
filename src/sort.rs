@@ -22,20 +22,13 @@ impl Sorts {
 
 impl crate::MainGUI {
     /// sorts the games according to `key` while moving `selected` accordingly if applicable.
+    /// doesn't work at all
     pub fn sort(&mut self, key: fn(&Game, &Game) -> Ordering) {
         if let Some(i) = self.selected {
-            self.games.rotate_left(i + 1);
-            let upto = self.games.len() - 1;
-            let subarray = &mut self.games[0..upto];
-            subarray.sort_unstable_by(key);
-            let mut j = upto;
-            while let Ordering::Less = key(&self.games[j + 1], &self.games[j]) {
-                self.games.swap(j, j + 1);
-                if j == 0 {
-                    break;
-                }
-                j -= 1;
-            }
+            let mut indices = (0..self.games.len()).collect::<Vec<_>>();
+            indices.sort_unstable_by(|i, j| key(&self.games[*i], &self.games[*j]));
+            self.games.sort_unstable_by(key);
+            self.selected = Some(indices[i]);
         } else {
             self.games.sort_unstable_by(key);
         }
