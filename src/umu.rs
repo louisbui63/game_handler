@@ -7,6 +7,7 @@ pub struct UmuRunner {
     pub path_to_umu: String,
     pub path_to_proton: String,
     pub gameid: String,
+    pub store: String,
 }
 
 impl Runner for UmuRunner {
@@ -14,6 +15,9 @@ impl Runner for UmuRunner {
         let mut envs = std::collections::HashMap::new();
 
         envs.insert("GAMEID".to_owned(), self.gameid.clone());
+        if !self.store.is_empty() {
+            envs.insert("STORE".to_owned(), self.store.clone());
+        }
         envs.insert("PROTONPATH".to_owned(), self.path_to_proton.clone());
 
         let args = vec![self.path.clone()];
