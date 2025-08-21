@@ -97,10 +97,11 @@ fn main() -> iced::Result {
     // MainGUI::run(Settings {
     //     ..Default::default()
     // })
-    iced::application("game_handler", MainGUI::update, MainGUI::view)
+    iced::application(MainGUI::new, MainGUI::update, MainGUI::view)
+        .title("game_handler")
         .subscription(MainGUI::subscription)
         .theme(MainGUI::theme)
-        .run_with(MainGUI::new)
+        .run()
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -731,9 +732,12 @@ impl MainGUI {
                     .unwrap()
                     .1
                     .as_string();
-                iced::Subscription::run_with_id(
-                    q.clone(),
-                    iced::futures::stream::unfold(q.clone(), move |q| {
+                let q = q.clone();
+                iced::Subscription::run_with((q, api_key), |(q, api_key)| {
+                    let q = q.clone();
+                    let api_key = api_key.clone();
+
+                    iced::futures::stream::unfold(q, move |q| {
                         let api_key = api_key.clone();
                         async move {
                             use steamgriddb_api::Client;
@@ -744,11 +748,11 @@ impl MainGUI {
                                     log::error!("error in SGDB search query : {e}");
                                     Vec::new()
                                 })),
-                                q.clone(),
+                                q,
                             ))
                         }
-                    }),
-                )
+                    })
+                })
             }
             SGDBAsyncStatus::ImageQuery(id) => {
                 let api_key = self
@@ -757,8 +761,10 @@ impl MainGUI {
                     .unwrap()
                     .1
                     .as_string();
-                iced::Subscription::run_with_id(
-                    *id,
+                let id = id.clone();
+                iced::Subscription::run_with((id, api_key), |(id, api_key)| {
+                    let api_key = api_key.clone();
+
                     iced::futures::stream::unfold(*id, move |id| {
                         let api_key = api_key.clone();
                         async move {
@@ -783,13 +789,13 @@ impl MainGUI {
                                 Some((Message::SGDBAsyncImageQueryStart(images), id))
                             }
                         }
-                    }),
-                )
+                    })
+                })
             }
             SGDBAsyncStatus::ImageDownload(images) => {
                 if let Some(image) = images.last() {
-                    iced::Subscription::run_with_id(
-                        image.id,
+                    let image = image.clone();
+                    iced::Subscription::run_with(image, |image| {
                         iced::futures::stream::unfold(image.clone(), move |image| async move {
                             let im = if let Ok(resp) = reqwest::get(image.thumb.clone()).await {
                                 if resp.status() == reqwest::StatusCode::OK {
@@ -808,45 +814,47 @@ impl MainGUI {
                                 None
                             };
                             Some((Message::SGDBAsyncImageDownloadProgress(im), image))
-                        }),
-                    )
+                        })
+                    })
                 } else {
                     iced::Subscription::none()
                 }
             }
-            SGDBAsyncStatus::FinalImageDownload(image) => iced::Subscription::run_with_id(
-                image.id,
-                iced::futures::stream::unfold(image.clone(), move |image| async move {
-                    let url = image.clone().url;
-                    let name = image.clone().id.to_string()
-                        + match image.clone().mime {
-                            steamgriddb_api::images::MimeTypes::Default(tp) => match tp {
-                                steamgriddb_api::query_parameters::MimeType::Png => ".png",
-                                steamgriddb_api::query_parameters::MimeType::Jpeg => ".jpeg",
-                                steamgriddb_api::query_parameters::MimeType::Webp => ".webp",
-                            },
-                            _ => unreachable!(),
-                        };
+            SGDBAsyncStatus::FinalImageDownload(image) => {
+                let image = image.clone();
+                iced::Subscription::run_with(image, |image| {
+                    iced::futures::stream::unfold(image.clone(), move |image| async move {
+                        let url = image.clone().url;
+                        let name = image.clone().id.to_string()
+                            + match image.clone().mime {
+                                steamgriddb_api::images::MimeTypes::Default(tp) => match tp {
+                                    steamgriddb_api::query_parameters::MimeType::Png => ".png",
+                                    steamgriddb_api::query_parameters::MimeType::Jpeg => ".jpeg",
+                                    steamgriddb_api::query_parameters::MimeType::Webp => ".webp",
+                                },
+                                _ => unreachable!(),
+                            };
 
-                    let path = if let Ok(resp) = reqwest::get(url).await {
-                        if resp.status() == reqwest::StatusCode::OK {
-                            use std::io::prelude::*;
-                            let path = DIRS.data_dir().join("banners").join(name);
-                            std::fs::File::create(path.clone())
-                                .unwrap()
-                                .write_all(&resp.bytes().await.unwrap())
-                                .unwrap();
-                            path.to_str().map(|a| a.to_owned())
+                        let path = if let Ok(resp) = reqwest::get(url).await {
+                            if resp.status() == reqwest::StatusCode::OK {
+                                use std::io::prelude::*;
+                                let path = DIRS.data_dir().join("banners").join(name);
+                                std::fs::File::create(path.clone())
+                                    .unwrap()
+                                    .write_all(&resp.bytes().await.unwrap())
+                                    .unwrap();
+                                path.to_str().map(|a| a.to_owned())
+                            } else {
+                                None
+                            }
                         } else {
                             None
-                        }
-                    } else {
-                        None
-                    };
+                        };
 
-                    Some((Message::SGDBAsyncFinalImageDownloadDone(path), image))
-                }),
-            ),
+                        Some((Message::SGDBAsyncFinalImageDownloadDone(path), image))
+                    })
+                })
+            }
         };
         let mono_clock = iced::time::every(iced::time::Duration::from_millis(
             if let GridStatus::Logs = self.grid_status {
@@ -884,6 +892,7 @@ impl MainGUI {
                 text: color!(0xc6d0f5),       // Text
                 primary: color!(0xFFABFF),    // Not Blue
                 success: color!(0xa6d189),    // Green
+                warning: color!(0xe78244),    // Orange
                 danger: color!(0xe78284),     // Red
             },
             |pal| {

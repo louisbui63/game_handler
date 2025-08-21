@@ -1,6 +1,7 @@
 use crate::games::*;
 
-/// runner for Nintendo 3DS games via Citra emulator. Should work with modern forks too.
+/// runner for Nintendo 3DS games via Citra emulator. Should work with modern forks too. Note that
+/// one should use the "QT" version of Citra with this runner.
 #[derive(Debug, Clone)]
 pub struct CitraRunner {
     pub path: String,

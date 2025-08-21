@@ -437,7 +437,9 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
                                 .width(Length::Fixed(image_size as f32))
                                 // .height(Length::Fixed(IMAGE_HEIGHT as f32))
                                 .into(),
-                                iced::widget::text(g.name.clone()).into(),
+                                iced::widget::text(g.name.clone())
+                                    .shaping(text::Shaping::Advanced)
+                                    .into(),
                             ])
                             // .padding(iced::Padding::from(0.5))
                             .align_x(iced::Alignment::Center),

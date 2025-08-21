@@ -1,4 +1,4 @@
-use std::{collections::HashMap, process::Stdio};
+use std::{collections::HashMap, hash::Hash, process::Stdio};
 
 use crate::process_subscription::PSubInput;
 
@@ -39,6 +39,16 @@ pub struct Command {
     pub cwd: Option<std::path::PathBuf>,
     pub args: Vec<String>,
     pub envs: HashMap<String, String>,
+}
+
+// we have to do that manually because HashMap doesn't implement Hash"
+impl Hash for Command {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.program.hash(state);
+        self.cwd.hash(state);
+        self.args.hash(state);
+        self.envs.values().collect::<Vec<_>>().hash(state);
+    }
 }
 
 impl Command {
