@@ -41,16 +41,6 @@ pub struct Command {
     pub envs: HashMap<String, String>,
 }
 
-// we have to do that manually because HashMap doesn't implement Hash"
-impl Hash for Command {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.program.hash(state);
-        self.cwd.hash(state);
-        self.args.hash(state);
-        self.envs.values().collect::<Vec<_>>().hash(state);
-    }
-}
-
 impl Command {
     pub fn run(&self) -> Option<tokio::process::Child> {
         let mut cmd = tokio::process::Command::new(self.program.clone());

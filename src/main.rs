@@ -22,6 +22,7 @@ mod wine;
 mod yuzu;
 
 use std::collections::HashMap;
+use std::hash::{DefaultHasher, Hash, Hasher};
 
 use config::{get_default_config_with_vals, CValue, Cfg};
 use games::Game;
@@ -29,6 +30,8 @@ use iced::color;
 use iced::futures::channel::mpsc::Sender;
 use iced::theme::Palette;
 use iced::Task as Command;
+
+use crate::process_subscription::RunWithId;
 
 pub const WIDGET_HEIGHT: u16 = 31;
 pub const IMAGE_WIDTH: u32 = 200;
@@ -732,12 +735,11 @@ impl MainGUI {
                     .unwrap()
                     .1
                     .as_string();
-                let q = q.clone();
-                iced::Subscription::run_with((q, api_key), |(q, api_key)| {
-                    let q = q.clone();
-                    let api_key = api_key.clone();
-
-                    iced::futures::stream::unfold(q, move |q| {
+                let mut hasher = DefaultHasher::new();
+                q.hash(&mut hasher);
+                iced::Subscription::run_with_id(
+                    hasher.finish(),
+                    iced::futures::stream::unfold(q.clone(), move |q| {
                         let api_key = api_key.clone();
                         async move {
                             use steamgriddb_api::Client;
@@ -751,8 +753,8 @@ impl MainGUI {
                                 q,
                             ))
                         }
-                    })
-                })
+                    }),
+                )
             }
             SGDBAsyncStatus::ImageQuery(id) => {
                 let api_key = self
@@ -761,10 +763,7 @@ impl MainGUI {
                     .unwrap()
                     .1
                     .as_string();
-                let id = id.clone();
-                iced::Subscription::run_with((id, api_key), |(id, api_key)| {
-                    let api_key = api_key.clone();
-
+                iced::Subscription::run_with_id(*id, {
                     iced::futures::stream::unfold(*id, move |id| {
                         let api_key = api_key.clone();
                         async move {
@@ -794,8 +793,7 @@ impl MainGUI {
             }
             SGDBAsyncStatus::ImageDownload(images) => {
                 if let Some(image) = images.last() {
-                    let image = image.clone();
-                    iced::Subscription::run_with(image, |image| {
+                    iced::Subscription::run_with_id(image.id, {
                         iced::futures::stream::unfold(image.clone(), move |image| async move {
                             let im = if let Ok(resp) = reqwest::get(image.thumb.clone()).await {
                                 if resp.status() == reqwest::StatusCode::OK {
@@ -821,8 +819,7 @@ impl MainGUI {
                 }
             }
             SGDBAsyncStatus::FinalImageDownload(image) => {
-                let image = image.clone();
-                iced::Subscription::run_with(image, |image| {
+                iced::Subscription::run_with_id(image.id, {
                     iced::futures::stream::unfold(image.clone(), move |image| async move {
                         let url = image.clone().url;
                         let name = image.clone().id.to_string()

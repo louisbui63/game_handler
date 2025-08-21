@@ -23,9 +23,7 @@ pub enum PSubInput {
 }
 
 pub fn get_psub(idx: usize, cmd_builder: Option<crate::games::Command>) -> Subscription<Event> {
-    iced::Subscription::run_with((idx, cmd_builder), |(idx, cmd_builder)| {
-        let idx = idx.clone();
-        let cmd_builder = cmd_builder.clone();
+    iced::Subscription::run_with_id(idx, {
         iced::stream::channel(100, move |mut output: mpsc::Sender<Event>| {
             async move {
                 let mut state = PSubState::Starting;
@@ -185,7 +183,7 @@ where
     }
 }
 
-trait RunWithId<T> {
+pub trait RunWithId<T> {
     fn run_with_id<I, S>(id: I, stream: S) -> Self
     where
         I: std::hash::Hash + 'static,

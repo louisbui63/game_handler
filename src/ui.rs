@@ -437,7 +437,10 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
                                 .width(Length::Fixed(image_size as f32))
                                 // .height(Length::Fixed(IMAGE_HEIGHT as f32))
                                 .into(),
-                                iced::widget::text(g.name.clone())
+                                // advanced shaping can cause memory leaks (for exemple, using
+                                // ascii space in the middle of fullwidth CJK characters). Use with
+                                // care
+                                iced::widget::text(String::from(&g.name.clone()[..]))
                                     .shaping(text::Shaping::Advanced)
                                     .into(),
                             ])
