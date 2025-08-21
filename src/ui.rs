@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use crate::config;
 // use crate::theme::widget::Element;
 use crate::Message;
@@ -48,6 +50,14 @@ use iced_fonts::NERD_FONT;
 //         }
 //     }
 // }
+
+static HANDLE: LazyLock<iced::advanced::image::Handle> = LazyLock::new(|| {
+    iced::advanced::image::Handle::from_rgba(
+        IMAGE_WIDTH,
+        IMAGE_HEIGHT,
+        [0u8; 4 * IMAGE_WIDTH as usize * IMAGE_HEIGHT as usize].as_slice(),
+    )
+});
 
 pub fn get_widget(
     v: &config::CValue,
@@ -421,26 +431,23 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
         crate::GridStatus::GamesGrid => {
             let image_size = IMAGE_WIDTH as u16;
 
-            let mut grid: crate::grid_widget::Grid<Message, _> =
-                crate::grid_widget::Grid::with_column_width(image_size as f32 + 20.);
+            let mut grid = crate::grid_widget::Grid::with_column_width(image_size as f32 + 20.);
             for (i, g) in mg.games.iter().enumerate() {
                 grid.insert::<iced::Element<'_, Message>>(
                     iced::widget::Container::new(
                         iced::widget::button(
                             iced::widget::column(vec![
-                                iced::widget::image(iced::widget::image::Handle::from_rgba(
-                                    g.image.width(),
-                                    g.image.height(),
-                                    g.image.as_raw().clone(),
-                                ))
+                                iced::widget::image(
+                                    g.box_art
+                                        .clone()
+                                        .map(|p| iced::widget::image::Handle::from_path(p))
+                                        .unwrap_or(HANDLE.clone()),
+                                )
                                 .filter_method(FilterMethod::Linear)
                                 .width(Length::Fixed(image_size as f32))
                                 // .height(Length::Fixed(IMAGE_HEIGHT as f32))
                                 .into(),
-                                // advanced shaping can cause memory leaks (for exemple, using
-                                // ascii space in the middle of fullwidth CJK characters). Use with
-                                // care
-                                iced::widget::text(String::from(&g.name.clone()[..]))
+                                iced::widget::text(g.name.clone())
                                     .shaping(text::Shaping::Advanced)
                                     .into(),
                             ])

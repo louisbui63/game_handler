@@ -172,7 +172,7 @@ pub struct Game {
     pub name: String,
     pub box_art: Option<String>,
     pub release_year: Option<isize>,
-    pub image: image::RgbaImage,
+    // pub image: image::RgbaImage,
     pub path_to_game: std::path::PathBuf,
     pub runner_id: String,
     pub runner: Box<dyn Runner>,

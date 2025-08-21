@@ -654,15 +654,6 @@ impl Cfg {
             "found config for game \"{}\"",
             self.get_or_default("name", &default).as_string()
         );
-        let image = if let Ok(a) = image::io::Reader::open(box_art.clone()) {
-            a.decode()
-                .unwrap()
-                .thumbnail(crate::IMAGE_WIDTH, crate::IMAGE_HEIGHT)
-        } else {
-            image::DynamicImage::new_rgba8(crate::IMAGE_WIDTH, crate::IMAGE_HEIGHT)
-        }
-        // .resize(200, 300, FilterType::Triangle)
-        .to_rgba8();
 
         let runner_id = self.get_or_default("runner", &default).as_string();
         let runner = match &runner_id[..] {
@@ -776,7 +767,6 @@ impl Cfg {
                 &self.get_or_default("release_year", &default).as_string()[..],
             )
             .ok(),
-            image,
             path_to_game: path.into(),
             runner_id,
             runner,
