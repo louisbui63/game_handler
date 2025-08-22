@@ -461,7 +461,7 @@ impl MainGUI {
                         let path = DIRS
                             .config_dir()
                             .join("games")
-                            .join(random_id.to_string() + &name[..] + ".toml");
+                            .join(name + random_id.to_string().as_str() + ".toml");
                         let cfg = self.temp_settings.as_mut().unwrap();
                         self.games.push(cfg.clone().into_game(
                             &DIRS.config_dir().join("settings.toml"),
