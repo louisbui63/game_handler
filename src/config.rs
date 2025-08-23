@@ -150,8 +150,8 @@ impl CValue {
     }
 }
 
-pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
-    once_cell::sync::Lazy::new(|| {
+pub static CONFIG_ORDER: std::sync::LazyLock<Vec<(String, Vec<String>)>> =
+    std::sync::LazyLock::new(|| {
         vec![
             (
                 "launcher:launcher".to_owned(),
@@ -269,8 +269,8 @@ pub static CONFIG_ORDER: once_cell::sync::Lazy<Vec<(String, Vec<String>)>> =
         ]
     });
 
-pub static DEFAULT_CONFIG: once_cell::sync::Lazy<HashMap<String, (String, CValue)>> =
-    once_cell::sync::Lazy::new(|| {
+pub static DEFAULT_CONFIG: std::sync::LazyLock<HashMap<String, (String, CValue)>> =
+    std::sync::LazyLock::new(|| {
         let mut out = HashMap::new();
 
         out.insert(
@@ -562,7 +562,7 @@ impl Cfg {
     }
     pub fn from_toml(path: &std::path::Path) -> Self {
         let toml = std::fs::read_to_string(path).unwrap_or_default();
-        let value = toml::Value::from_str(&toml[..]).unwrap();
+        let value: toml::Value = toml::from_str(&toml[..]).unwrap();
         let tot = value.as_table().unwrap();
 
         let mut out = HashMap::new();

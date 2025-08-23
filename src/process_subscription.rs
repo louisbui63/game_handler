@@ -153,6 +153,9 @@ pub fn get_psub(idx: usize, cmd_builder: Option<crate::games::Command>) -> Subsc
     })
 }
 
+// Below this point is a reimplementation of run_with_id, that used to exist in iced 1.13. This
+// allows for less data cloning.
+
 struct Runner<I, F, S, T>
 where
     F: FnOnce(iced::advanced::subscription::EventStream) -> S,

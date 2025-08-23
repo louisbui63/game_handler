@@ -37,11 +37,10 @@ pub const WIDGET_HEIGHT: u16 = 31;
 pub const IMAGE_WIDTH: u32 = 200;
 pub const IMAGE_HEIGHT: u32 = 300;
 
-pub static DIRS: once_cell::sync::Lazy<directories::ProjectDirs> =
-    once_cell::sync::Lazy::new(|| {
-        directories::ProjectDirs::from("com", "louisbui63", "game_handler")
-            .expect("couldn't find home directory")
-    });
+pub static DIRS: std::sync::LazyLock<directories::ProjectDirs> = std::sync::LazyLock::new(|| {
+    directories::ProjectDirs::from("com", "louisbui63", "game_handler")
+        .expect("couldn't find home directory")
+});
 
 fn main() -> iced::Result {
     // File::create()

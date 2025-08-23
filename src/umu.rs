@@ -1,6 +1,6 @@
 use crate::games::*;
 
-/// runner for PlayStation Vita games via the Vita3K emulator
+/// runner for Windows games via the Proton based umu launcher
 #[derive(Debug, Clone)]
 pub struct UmuRunner {
     pub path: String,

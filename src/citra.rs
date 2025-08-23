@@ -1,7 +1,7 @@
 use crate::games::*;
 
 /// runner for Nintendo 3DS games via Citra emulator. Should work with modern forks too. Note that
-/// one should use the "QT" version of Citra with this runner.
+/// one should use the "QT" version of the executable with this runner.
 #[derive(Debug, Clone)]
 pub struct CitraRunner {
     pub path: String,
@@ -11,7 +11,7 @@ pub struct CitraRunner {
 
 impl Runner for CitraRunner {
     fn get_command(&self) -> Command {
-        let mut args = vec!["-g".to_owned(), self.path.clone()];
+        let mut args = vec![self.path.clone()];
         if self.fullscreen {
             args.insert(0, "-f".to_owned())
         }
