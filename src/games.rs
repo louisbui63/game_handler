@@ -1,37 +1,66 @@
-use std::{collections::HashMap, hash::Hash, process::Stdio};
+use std::{collections::HashMap, process::Stdio, sync::LazyLock};
 
-use crate::process_subscription::PSubInput;
+use crate::{
+    config::{CValue, Cfg},
+    process_subscription::PSubInput,
+};
 
-#[cfg(unix)]
-pub const RUNNERS: [&str; 13] = [
-    "dummy",
-    "native",
-    "wine",
-    "ryujinx",
-    "rpcs3",
-    "mame",
-    "pcsx2",
-    "yuzu",
-    "citra",
-    "vita3k",
-    "steam",
-    "duckstation",
-    "umu",
-];
-#[cfg(windows)]
-pub const RUNNERS: [&str; 11] = [
-    "dummy",
-    "native",
-    "ryujinx",
-    "rpcs3",
-    "mame",
-    "pcsx2",
-    "yuzu",
-    "citra",
-    "vita3k",
-    "steam",
-    "duckstation",
-];
+use crate::{
+    citra::CitraRunner, duckstation::DuckStationRunner, mame::MameRunner, native::NativeRunner,
+    pcsx2::Pcsx2Runner, rpcs3::Rpcs3Runner, ryujinx::RyujinxRunner, steam::SteamRunner,
+    umu::UmuRunner, vita3k::Vita3kRunner, wine::WineRunner, yuzu::YuzuRunner,
+};
+
+pub static RUNNERS: LazyLock<Vec<Box<dyn Runner>>> = LazyLock::new(|| {
+    vec![
+        Box::new(DummyRunner),
+        Box::new(NativeRunner),
+        #[cfg(unix)]
+        Box::new(WineRunner),
+        Box::new(RyujinxRunner),
+        Box::new(Rpcs3Runner),
+        Box::new(MameRunner),
+        Box::new(Pcsx2Runner),
+        Box::new(YuzuRunner),
+        Box::new(CitraRunner),
+        Box::new(Vita3kRunner),
+        Box::new(SteamRunner),
+        Box::new(DuckStationRunner),
+        #[cfg(unix)]
+        Box::new(UmuRunner),
+    ]
+});
+
+// #[cfg(unix)]
+// pub const RUNNERS: [&str; 13] = [
+//     "dummy",
+//     "native",
+//     "wine",
+//     "ryujinx",
+//     "rpcs3",
+//     "mame",
+//     "pcsx2",
+//     "yuzu",
+//     "citra",
+//     "vita3k",
+//     "steam",
+//     "duckstation",
+//     "umu",
+// ];
+// #[cfg(windows)]
+// pub const RUNNERS: [&str; 11] = [
+//     "dummy",
+//     "native",
+//     "ryujinx",
+//     "rpcs3",
+//     "mame",
+//     "pcsx2",
+//     "yuzu",
+//     "citra",
+//     "vita3k",
+//     "steam",
+//     "duckstation",
+// ];
 
 #[derive(Default, Debug, Clone)]
 pub struct Command {
@@ -153,7 +182,7 @@ impl Command {
     }
 }
 
-pub trait Runner {
+pub trait RunnerInstance {
     fn get_command(&self) -> Command {
         Command::default()
     }
@@ -165,8 +194,44 @@ pub trait Runner {
     }
 }
 
-pub struct DummyRunner();
-impl Runner for DummyRunner {}
+pub trait Runner: Sync + Send {
+    fn create_instance(
+        &self,
+        cfg: &Cfg,
+        path: String,
+        default: &HashMap<String, (String, CValue)>,
+    ) -> Box<dyn RunnerInstance>;
+    fn get_config_order(&self) -> (String, Vec<String>);
+    fn get_default_config(&self) -> HashMap<String, (String, CValue)>;
+    fn get_runner_id(&self) -> String;
+}
+
+pub struct DummyRunner;
+impl Runner for DummyRunner {
+    fn create_instance(
+        &self,
+        _cfg: &Cfg,
+        _path: String,
+        _default: &HashMap<String, (String, CValue)>,
+    ) -> Box<dyn RunnerInstance> {
+        Box::new(DummyRunnerInstance)
+    }
+
+    fn get_config_order(&self) -> (String, Vec<String>) {
+        ("dummy".to_owned(), vec![])
+    }
+
+    fn get_default_config(&self) -> HashMap<String, (String, CValue)> {
+        HashMap::new()
+    }
+
+    fn get_runner_id(&self) -> String {
+        "dummy".to_owned()
+    }
+}
+
+pub struct DummyRunnerInstance;
+impl RunnerInstance for DummyRunnerInstance {}
 
 pub struct Game {
     pub name: String,
@@ -175,7 +240,7 @@ pub struct Game {
     // pub image: image::RgbaImage,
     pub path_to_game: std::path::PathBuf,
     pub runner_id: String,
-    pub runner: Box<dyn Runner>,
+    pub runner_instance: Box<dyn RunnerInstance>,
     pub config: Config,
 
     pub path_to_toml: std::path::PathBuf,
@@ -212,14 +277,14 @@ impl Game {
     }
 
     pub fn run(&mut self) {
-        let mut cmd = self.runner.get_command();
+        let mut cmd = self.runner_instance.get_command();
         cmd.apply_config(&self.config);
         self.cmd_to_run = Some(cmd);
         self.is_running = true;
     }
 
     pub fn run_subcommand(&mut self, a: String) {
-        let cmd = self.runner.get_subcommand_command(a);
+        let cmd = self.runner_instance.get_subcommand_command(a);
         if let Some(mut cmd) = cmd {
             cmd.apply_config(&self.config);
             self.cmd_to_run = Some(cmd);
@@ -228,7 +293,7 @@ impl Game {
     }
 
     pub fn get_subcommands(&self) -> Vec<String> {
-        self.runner.get_subcommands()
+        self.runner_instance.get_subcommands()
     }
 }
 

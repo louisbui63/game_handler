@@ -9,7 +9,7 @@ use iced::{
         widget::{Operation, Tree},
         Clipboard, Layout, Shell, Widget,
     },
-    event, Element, Event, Length, Point, Rectangle, Size,
+    Element, Event, Length, Point, Rectangle, Size,
 };
 
 #[allow(missing_debug_implementations)]

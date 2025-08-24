@@ -1,9 +1,140 @@
-use crate::games::*;
+use std::collections::HashMap;
+
+use crate::{
+    config::{opt, CValue},
+    games::*,
+};
 
 /// runner for Windows applications via Wine compatibility layer
 /// provides access to vkd3d, dxvk and dxvk_nvapi, among other.
+pub struct WineRunner;
+
+impl Runner for WineRunner {
+    fn create_instance(
+        &self,
+        cfg: &crate::config::Cfg,
+        path: String,
+        default: &HashMap<String, (String, CValue)>,
+    ) -> Box<dyn RunnerInstance> {
+        Box::new(WineRunnerInstance {
+            path: path,
+            path_to_wine: cfg.get_or_default("wine:path_to_wine", default).as_string(),
+            wineprefix: opt(cfg.get_or_default("wine:wineprefix", default).as_string()),
+            use_vkd3d: cfg.get_or_default("wine:use_vkd3d", default).as_bool(),
+            vkd3d_path: opt(cfg.get_or_default("wine:vkd3d_path", default).as_string()),
+            use_dxvk: cfg.get_or_default("wine:use_dxvk", default).as_bool(),
+            dxvk_path: opt(cfg.get_or_default("wine:dxvk_path", default).as_string()),
+            use_dxvk_nvapi: cfg.get_or_default("wine:use_dxvk_nvapi", default).as_bool(),
+            dxvk_nvapi_path: opt(cfg
+                .get_or_default("wine:dxvk_nvapi_path", default)
+                .as_string()),
+            fsync: cfg.get_or_default("wine:esync", default).as_bool(),
+            esync: cfg.get_or_default("wine:fsync", default).as_bool(),
+            use_fsr: cfg.get_or_default("wine:use_fsr", default).as_bool(),
+            fsr_strength: cfg.get_or_default("wine:fsr_strength", default).as_string(),
+            args: cfg.get_or_default("wine:args", default).as_strarr(),
+        })
+    }
+
+    fn get_config_order(&self) -> (String, Vec<String>) {
+        (
+            "wine:wine".to_owned(),
+            vec![
+                "wine:path_to_wine".to_owned(),
+                "wine:wineprefix".to_owned(),
+                "wine:use_dxvk".to_owned(),
+                "wine:dxvk_path".to_owned(),
+                "wine:use_vkd3d".to_owned(),
+                "wine:vkd3d_path".to_owned(),
+                "wine:use_dxvk_nvapi".to_owned(),
+                "wine:dxvk_nvapi_path".to_owned(),
+                "wine:esync".to_owned(),
+                "wine:fsync".to_owned(),
+                "wine:use_fsr".to_owned(),
+                "wine:fsr_strength".to_owned(),
+                "wine:args".to_owned(),
+            ],
+        )
+    }
+
+    fn get_default_config(
+        &self,
+    ) -> std::collections::HashMap<String, (String, crate::config::CValue)> {
+        let mut out = HashMap::new();
+        out.insert(
+            "wine:args".to_owned(),
+            ("arguments".to_owned(), CValue::StrArr(Vec::new())),
+        );
+        out.insert(
+            "wine:path_to_wine".to_owned(),
+            (
+                "path to wine executable".to_owned(),
+                CValue::PickFile("wine".to_owned()),
+            ),
+        );
+        out.insert(
+            "wine:wineprefix".to_owned(),
+            (
+                "path to wineprefix".to_owned(),
+                CValue::PickFolder("".to_owned()),
+            ),
+        );
+        out.insert(
+            "wine:use_vkd3d".to_owned(),
+            ("enable vkd3d".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "wine:vkd3d_path".to_owned(),
+            (
+                "path to vkd3d".to_owned(),
+                CValue::PickFolder("".to_owned()),
+            ),
+        );
+        out.insert(
+            "wine:use_dxvk".to_owned(),
+            ("enable dxvk".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "wine:dxvk_path".to_owned(),
+            ("path to dxvk".to_owned(), CValue::PickFolder("".to_owned())),
+        );
+        out.insert(
+            "wine:use_dxvk_nvapi".to_owned(),
+            ("enable dxvk_nvapi".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "wine:dxvk_nvapi_path".to_owned(),
+            (
+                "path to dxvk_nvapi".to_owned(),
+                CValue::PickFolder("".to_owned()),
+            ),
+        );
+        out.insert(
+            "wine:esync".to_owned(),
+            ("enable esync".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "wine:fsync".to_owned(),
+            ("enable fsync".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "wine:use_fsr".to_owned(),
+            ("enable FSR upscaling".to_owned(), CValue::Bool(false)),
+        );
+        out.insert(
+            "wine:fsr_strength".to_owned(),
+            ("FSR strength".to_owned(), CValue::Str("".to_owned())),
+        );
+        out
+    }
+
+    fn get_runner_id(&self) -> String {
+        "wine".to_owned()
+    }
+}
+
 #[derive(Debug, Clone)]
-pub struct WineRunner {
+pub struct WineRunnerInstance {
     pub path: String,
     pub path_to_wine: String,
     pub wineprefix: Option<String>,
@@ -20,7 +151,7 @@ pub struct WineRunner {
     pub args: Vec<String>,
 }
 
-impl Runner for WineRunner {
+impl RunnerInstance for WineRunnerInstance {
     fn get_subcommands(&self) -> Vec<String> {
         vec![
             "Wine Control Panel".to_owned(),
@@ -47,7 +178,7 @@ impl Runner for WineRunner {
         self.real_get_command(None)
     }
 }
-impl WineRunner {
+impl WineRunnerInstance {
     fn real_get_command(&self, command_override: Option<String>) -> Command {
         let mut dlloverrides = vec![];
 

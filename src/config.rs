@@ -1,21 +1,5 @@
+use crate::games::{RunnerInstance, RUNNERS};
 use std::{collections::HashMap, str::FromStr};
-
-#[cfg(unix)]
-use crate::wine::WineRunner;
-use crate::{
-    citra::CitraRunner,
-    duckstation::DuckStationRunner,
-    games::{DummyRunner, Runner},
-    mame::MameRunner,
-    native::NativeRunner,
-    pcsx2::Pcsx2Runner,
-    rpcs3::Rpcs3Runner,
-    ryujinx::RyujinxRunner,
-    steam::SteamRunner,
-    umu::UmuRunner,
-    vita3k::Vita3kRunner,
-    yuzu::YuzuRunner,
-};
 
 #[derive(Clone, Debug)]
 pub enum CValue {
@@ -63,7 +47,7 @@ impl CValue {
         }
     }
 
-    fn as_strarr(&self) -> Vec<String> {
+    pub fn as_strarr(&self) -> Vec<String> {
         if let Self::StrArr(s) = self {
             s.to_vec()
         } else {
@@ -71,7 +55,7 @@ impl CValue {
         }
     }
 
-    fn as_hashmap(&self) -> HashMap<String, String> {
+    pub fn as_hashmap(&self) -> HashMap<String, String> {
         if let Self::StrArr(s) = self {
             let mut out = HashMap::new();
             let mut first: Option<String> = None;
@@ -92,7 +76,7 @@ impl CValue {
         }
     }
 
-    fn as_bool(&self) -> bool {
+    pub fn as_bool(&self) -> bool {
         if let Self::Bool(b) = self {
             *b
         } else {
@@ -152,7 +136,7 @@ impl CValue {
 
 pub static CONFIG_ORDER: std::sync::LazyLock<Vec<(String, Vec<String>)>> =
     std::sync::LazyLock::new(|| {
-        vec![
+        let mut out = vec![
             (
                 "launcher:launcher".to_owned(),
                 vec!["launcher:sgdb_api_key".to_owned()],
@@ -188,85 +172,14 @@ pub static CONFIG_ORDER: std::sync::LazyLock<Vec<(String, Vec<String>)>> =
                     "gamemode".to_owned(),
                 ],
             ),
-            ("native:native".to_owned(), vec!["native:args".to_owned()]),
-            (
-                "ryujinx:ryujinx".to_owned(),
-                vec!["ryujinx:path_to_ryujinx".to_owned()],
-            ),
-            #[cfg(unix)]
-            (
-                "wine:wine".to_owned(),
-                vec![
-                    "wine:path_to_wine".to_owned(),
-                    "wine:wineprefix".to_owned(),
-                    "wine:use_dxvk".to_owned(),
-                    "wine:dxvk_path".to_owned(),
-                    "wine:use_vkd3d".to_owned(),
-                    "wine:vkd3d_path".to_owned(),
-                    "wine:use_dxvk_nvapi".to_owned(),
-                    "wine:dxvk_nvapi_path".to_owned(),
-                    "wine:esync".to_owned(),
-                    "wine:fsync".to_owned(),
-                    "wine:use_fsr".to_owned(),
-                    "wine:fsr_strength".to_owned(),
-                    "wine:args".to_owned(),
-                ],
-            ),
-            (
-                "rpcs3:rpcs3".to_owned(),
-                vec!["rpcs3:path_to_rpcs3".to_owned()],
-            ),
-            (
-                "mame:mame".to_owned(),
-                vec![
-                    "mame:path_to_mame".to_owned(),
-                    "mame:machine_name".to_owned(),
-                    "mame:fullscreen".to_owned(),
-                ],
-            ),
-            (
-                "pcsx2:pcsx2".to_owned(),
-                vec![
-                    "pcsx2:path_to_pcsx2".to_owned(),
-                    "pcsx2:fullscreen".to_owned(),
-                ],
-            ),
-            (
-                "yuzu:yuzu".to_owned(),
-                vec!["yuzu:path_to_yuzu".to_owned(), "yuzu:fullscreen".to_owned()],
-            ),
-            (
-                "citra:citra".to_owned(),
-                vec![
-                    "citra:path_to_citra".to_owned(),
-                    "citra:fullscreen".to_owned(),
-                ],
-            ),
-            (
-                "vita3k:vita3k".to_owned(),
-                vec![
-                    "vita3k:path_to_vita3k".to_owned(),
-                    "vita3k:fullscreen".to_owned(),
-                ],
-            ),
-            (
-                "duckstation:duckstation".to_owned(),
-                vec![
-                    "duckstation:path_to_duckstation".to_owned(),
-                    "duckstation:fullscreen".to_owned(),
-                ],
-            ),
-            #[cfg(unix)]
-            (
-                "umu:umu".to_owned(),
-                vec![
-                    "umu:path_to_umu".to_owned(),
-                    "umu:path_to_proton".to_owned(),
-                    "umu:gameid".to_owned(),
-                    "umu:store".to_owned(),
-                ],
-            ),
-        ]
+        ];
+        for runner in RUNNERS.iter() {
+            let co = runner.get_config_order();
+            if !co.1.is_empty() {
+                out.push(co)
+            }
+        }
+        out
     });
 
 pub static DEFAULT_CONFIG: std::sync::LazyLock<HashMap<String, (String, CValue)>> =
@@ -300,7 +213,7 @@ pub static DEFAULT_CONFIG: std::sync::LazyLock<HashMap<String, (String, CValue)>
                 CValue::OneOff(
                     crate::games::RUNNERS
                         .iter()
-                        .map(|a| a.to_string())
+                        .map(|a| a.get_runner_id())
                         .collect(),
                     0,
                 ),
@@ -362,171 +275,9 @@ pub static DEFAULT_CONFIG: std::sync::LazyLock<HashMap<String, (String, CValue)>
             ("gamemode".to_owned(), CValue::Bool(true)),
         );
 
-        out.insert(
-            "native:args".to_owned(),
-            (
-                "additional arguments".to_owned(),
-                CValue::StrArr(Vec::new()),
-            ),
-        );
-
-        out.insert(
-            "ryujinx:path_to_ryujinx".to_owned(),
-            (
-                "path to ryujinx executable".to_owned(),
-                CValue::PickFile("ryujinx".to_owned()),
-            ),
-        );
-
-        #[cfg(unix)]
-        {
-            out.insert(
-                "wine:args".to_owned(),
-                ("arguments".to_owned(), CValue::StrArr(Vec::new())),
-            );
-            out.insert(
-                "wine:path_to_wine".to_owned(),
-                (
-                    "path to wine executable".to_owned(),
-                    CValue::PickFile("wine".to_owned()),
-                ),
-            );
-            out.insert(
-                "wine:wineprefix".to_owned(),
-                (
-                    "path to wineprefix".to_owned(),
-                    CValue::PickFolder("".to_owned()),
-                ),
-            );
-            out.insert(
-                "wine:use_vkd3d".to_owned(),
-                ("enable vkd3d".to_owned(), CValue::Bool(false)),
-            );
-            out.insert(
-                "wine:vkd3d_path".to_owned(),
-                (
-                    "path to vkd3d".to_owned(),
-                    CValue::PickFolder("".to_owned()),
-                ),
-            );
-            out.insert(
-                "wine:use_dxvk".to_owned(),
-                ("enable dxvk".to_owned(), CValue::Bool(false)),
-            );
-            out.insert(
-                "wine:dxvk_path".to_owned(),
-                ("path to dxvk".to_owned(), CValue::PickFolder("".to_owned())),
-            );
-            out.insert(
-                "wine:use_dxvk_nvapi".to_owned(),
-                ("enable dxvk_nvapi".to_owned(), CValue::Bool(false)),
-            );
-            out.insert(
-                "wine:dxvk_nvapi_path".to_owned(),
-                (
-                    "path to dxvk_nvapi".to_owned(),
-                    CValue::PickFolder("".to_owned()),
-                ),
-            );
-            out.insert(
-                "wine:esync".to_owned(),
-                ("enable esync".to_owned(), CValue::Bool(false)),
-            );
-            out.insert(
-                "wine:fsync".to_owned(),
-                ("enable fsync".to_owned(), CValue::Bool(false)),
-            );
-            out.insert(
-                "wine:use_fsr".to_owned(),
-                ("enable FSR upscaling".to_owned(), CValue::Bool(false)),
-            );
-            out.insert(
-                "wine:fsr_strength".to_owned(),
-                ("FSR strength".to_owned(), CValue::Str("".to_owned())),
-            );
+        for runner in RUNNERS.iter() {
+            out.extend(runner.get_default_config())
         }
-        out.insert(
-            "rpcs3:path_to_rpcs3".to_owned(),
-            ("path to rpcs3".to_owned(), CValue::PickFile("".to_owned())),
-        );
-        out.insert(
-            "mame:path_to_mame".to_owned(),
-            ("path to mame".to_owned(), CValue::PickFile("".to_owned())),
-        );
-        out.insert(
-            "mame:machine_name".to_owned(),
-            ("machine name".to_owned(), CValue::Str("".to_owned())),
-        );
-        out.insert(
-            "mame:fullscreen".to_owned(),
-            ("fullscreen".to_owned(), CValue::Bool(false)),
-        );
-        out.insert(
-            "pcsx2:path_to_pcsx2".to_owned(),
-            ("path to pcsx2".to_owned(), CValue::PickFile("".to_owned())),
-        );
-        out.insert(
-            "pcsx2:fullscreen".to_owned(),
-            ("fullscreen".to_owned(), CValue::Bool(false)),
-        );
-        out.insert(
-            "yuzu:path_to_yuzu".to_owned(),
-            ("path to yuzu".to_owned(), CValue::PickFile("".to_owned())),
-        );
-        out.insert(
-            "yuzu:fullscreen".to_owned(),
-            ("fullscreen".to_owned(), CValue::Bool(false)),
-        );
-        out.insert(
-            "citra:path_to_citra".to_owned(),
-            ("path to citra".to_owned(), CValue::PickFile("".to_owned())),
-        );
-        out.insert(
-            "citra:fullscreen".to_owned(),
-            ("fullscreen".to_owned(), CValue::Bool(false)),
-        );
-        out.insert(
-            "vita3k:path_to_vita3k".to_owned(),
-            ("path to vita3k".to_owned(), CValue::PickFile("".to_owned())),
-        );
-        out.insert(
-            "vita3k:fullscreen".to_owned(),
-            ("fullscreen".to_owned(), CValue::Bool(false)),
-        );
-        out.insert(
-            "duckstation:path_to_duckstation".to_owned(),
-            (
-                "path to duckstation".to_owned(),
-                CValue::PickFile("".to_owned()),
-            ),
-        );
-        out.insert(
-            "duckstation:fullscreen".to_owned(),
-            ("fullscreen".to_owned(), CValue::Bool(false)),
-        );
-        #[cfg(unix)]
-        {
-            out.insert(
-                "umu:path_to_umu".to_owned(),
-                ("path to umu".to_owned(), CValue::PickFile("".to_owned())),
-            );
-            out.insert(
-                "umu:path_to_proton".to_owned(),
-                (
-                    "path to proton".to_owned(),
-                    CValue::PickFolder("".to_owned()),
-                ),
-            );
-            out.insert(
-                "umu:gameid".to_owned(),
-                ("gameid".to_owned(), CValue::Str("0".to_owned())),
-            );
-            out.insert(
-                "umu:store".to_owned(),
-                ("store".to_owned(), CValue::Str("".to_owned())),
-            );
-        }
-
         out
     });
 
@@ -542,7 +293,7 @@ pub fn get_default_config_with_vals(path: &std::path::Path) -> HashMap<String, (
     out
 }
 
-fn opt(s: String) -> Option<String> {
+pub fn opt(s: String) -> Option<String> {
     if s.is_empty() {
         None
     } else {
@@ -625,7 +376,7 @@ impl Cfg {
         toml::to_string_pretty(&toml::Value::Table(table)).unwrap()
     }
 
-    fn get_or_default(&self, key: &str, default: &HashMap<String, (String, CValue)>) -> CValue {
+    pub fn get_or_default(&self, key: &str, default: &HashMap<String, (String, CValue)>) -> CValue {
         let Self(s) = self;
         s.get(key)
             .unwrap_or(
@@ -656,109 +407,11 @@ impl Cfg {
         );
 
         let runner_id = self.get_or_default("runner", &default).as_string();
-        let runner = match &runner_id[..] {
-            "dummy" => Box::new(DummyRunner()) as Box<dyn Runner>,
-            "native" => Box::new(NativeRunner {
-                path: path.clone(),
-                args: self.get_or_default("native:args", &default).as_strarr(),
-            }) as Box<dyn Runner>,
-            "ryujinx" => Box::new(RyujinxRunner {
-                path: path.clone(),
-                path_to_ryujinx: self
-                    .get_or_default("ryujinx:path_to_ryujinx", &default)
-                    .as_string(),
-            }) as Box<dyn Runner>,
-            #[cfg(unix)]
-            "wine" => Box::new(WineRunner {
-                path: path.clone(),
-                path_to_wine: self
-                    .get_or_default("wine:path_to_wine", &default)
-                    .as_string(),
-                wineprefix: opt(self.get_or_default("wine:wineprefix", &default).as_string()),
-                use_vkd3d: self.get_or_default("wine:use_vkd3d", &default).as_bool(),
-                vkd3d_path: opt(self.get_or_default("wine:vkd3d_path", &default).as_string()),
-                use_dxvk: self.get_or_default("wine:use_dxvk", &default).as_bool(),
-                dxvk_path: opt(self.get_or_default("wine:dxvk_path", &default).as_string()),
-                use_dxvk_nvapi: self
-                    .get_or_default("wine:use_dxvk_nvapi", &default)
-                    .as_bool(),
-                dxvk_nvapi_path: opt(self
-                    .get_or_default("wine:dxvk_nvapi_path", &default)
-                    .as_string()),
-                fsync: self.get_or_default("wine:esync", &default).as_bool(),
-                esync: self.get_or_default("wine:fsync", &default).as_bool(),
-                use_fsr: self.get_or_default("wine:use_fsr", &default).as_bool(),
-                fsr_strength: self
-                    .get_or_default("wine:fsr_strength", &default)
-                    .as_string(),
-                args: self.get_or_default("wine:args", &default).as_strarr(),
-            }) as Box<dyn Runner>,
-            "rpcs3" => Box::new(Rpcs3Runner {
-                path: path.clone(),
-                path_to_rpcs3: self
-                    .get_or_default("rpcs3:path_to_rpcs3", &default)
-                    .as_string(),
-            }),
-            "mame" => Box::new(MameRunner {
-                path: path.clone(),
-                machine_name: self
-                    .get_or_default("mame:machine_name", &default)
-                    .as_string(),
-                path_to_mame: self
-                    .get_or_default("mame:path_to_mame", &default)
-                    .as_string(),
-                fullscreen: self.get_or_default("mame:fullscreen", &default).as_bool(),
-            }),
-            "pcsx2" => Box::new(Pcsx2Runner {
-                path: path.clone(),
-                path_to_pcsx2: self
-                    .get_or_default("pcsx2:path_to_pcsx2", &default)
-                    .as_string(),
-                fullscreen: self.get_or_default("pcsx2:fullscreen", &default).as_bool(),
-            }),
-            "yuzu" => Box::new(YuzuRunner {
-                path: path.clone(),
-                path_to_yuzu: self
-                    .get_or_default("yuzu:path_to_yuzu", &default)
-                    .as_string(),
-                fullscreen: self.get_or_default("yuzu:fullscreen", &default).as_bool(),
-            }),
-            "citra" => Box::new(CitraRunner {
-                path: path.clone(),
-                path_to_citra: self
-                    .get_or_default("citra:path_to_citra", &default)
-                    .as_string(),
-                fullscreen: self.get_or_default("citra:fullscreen", &default).as_bool(),
-            }),
-            "vita3k" => Box::new(Vita3kRunner {
-                path: path.clone(),
-                path_to_vita3k: self
-                    .get_or_default("vita3k:path_to_vita3k", &default)
-                    .as_string(),
-                fullscreen: self.get_or_default("vita3k:fullscreen", &default).as_bool(),
-            }),
-            "duckstation" => Box::new(DuckStationRunner {
-                path: path.clone(),
-                path_to_duckstation: self
-                    .get_or_default("duckstation:path_to_duckstation", &default)
-                    .as_string(),
-                fullscreen: self
-                    .get_or_default("duckstation:fullscreen", &default)
-                    .as_bool(),
-            }),
-            "steam" => Box::new(SteamRunner { path: path.clone() }),
-            #[cfg(unix)]
-            "umu" => Box::new(UmuRunner {
-                path: path.clone(),
-                path_to_umu: self.get_or_default("umu:path_to_umu", &default).as_string(),
-                path_to_proton: self
-                    .get_or_default("umu:path_to_proton", &default)
-                    .as_string(),
-                gameid: self.get_or_default("umu:gameid", &default).as_string(),
-                store: self.get_or_default("umu:store", &default).as_string(),
-            }),
-            _ => panic!("unknown runner"),
-        };
+        let runner = RUNNERS
+            .iter()
+            .find(|runner| runner.get_runner_id() == runner_id)
+            .expect("unknown runner")
+            .create_instance(&self, path.clone(), &default);
 
         crate::games::Game {
             name: self.get_or_default("name", &default).as_string(),
@@ -769,7 +422,7 @@ impl Cfg {
             .ok(),
             path_to_game: path.into(),
             runner_id,
-            runner,
+            runner_instance: runner,
             config: crate::games::Config {
                 #[cfg(unix)]
                 mangohud: self.get_or_default("mangohud", &default).as_bool(),
