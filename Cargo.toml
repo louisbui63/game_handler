@@ -10,34 +10,36 @@ debug = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# iced = {version="0.13.1", features=["image", "tokio", "advanced", "wgpu"]}
+iced = {version="0.14", features=["image", "tokio", "advanced", "wgpu"]}
+iced_aw = {version="0.14", features=["tab_bar", "card"]}
+iced_fonts = {version="0.3", features=["nerd"]}
 # iced = {path="iced", default-features = false, features=["image", "tokio", "advanced"]}
-iced = {git = "https://github.com/iced-rs/iced", rev = "9d56b48", features=["image", "tokio", "advanced", "wgpu"]}
+# iced = {git = "https://github.com/iced-rs/iced", rev = "9d56b48", features=["image", "tokio", "advanced", "wgpu"]}
 # iced_aw = {version="0.11.0", features=["tab_bar", "card"]}
-iced_aw = {git = "https://github.com/iced-rs/iced_aw", features=["tab_bar", "card"]}
-iced_fonts = {git="https://github.com/Redhawk18/iced_fonts", rev = "31970b2", features=["nerd"]}
+# iced_aw = {git = "https://github.com/iced-rs/iced_aw", features=["tab_bar", "card"]}
+# iced_fonts = {git="https://github.com/Redhawk18/iced_fonts", rev = "31970b2", features=["nerd"]}
 # iced_aw = {git = "https://github.com/louisbui63/iced_aw", features=["icon_text", "tab_bar", "modal", "card"]}
-image = "0.25.6"
-toml = "0.9"
-log = "0.4.27"
-flexi_logger = "0.31.2"
-rand = "0.9.2"
-rfd = { version="0.15.4", default-features = false, features = ["tokio","xdg-portal"] }
+image = "0.25.10"
+toml = "1.1"
+log = "0.4.29"
+flexi_logger = "0.31.8"
+rand = "0.10.1"
+rfd = { version="0.17.2", default-features = false, features = ["xdg-portal"] }
 directories = "6.0.0"
 timeout-readwrite = "0.4.0"
 steamgriddb_api = "0.3.1"
-tokio = {version = "1.47.1", features = ["full"]}
-tokio-stream = {version = "0.1.17", features = ["io-util"]}
-tokio-util = {version = "0.7.16", features = ["io"]}
-reqwest = { version = "0.12.23", features = ["blocking"] }
+tokio = {version = "1.52.1", features = ["full"]}
+tokio-stream = {version = "0.1.18", features = ["io-util"]}
+tokio-util = {version = "0.7.18", features = ["io"]}
+reqwest = { version = "0.13.3", features = ["blocking"] }
 nosleep = {path="nosleep/nosleep"}
 # nosleep = {git = "https://github.com/louisbui63/nosleep"}
 noop-waker = "0.1.0"
 serde = "1.0"
-sysinfo = "0.37.0"
+sysinfo = "0.38.4"
 chrono = "0.4"
 
-[patch.crates-io]
-iced = { git = "https://github.com/iced-rs/iced.git", rev = "9d56b48" }
-iced_core = { git = "https://github.com/iced-rs/iced.git", rev = "9d56b48" }
-iced_widget = { git = "https://github.com/iced-rs/iced.git", rev = "9d56b48" }
+# [patch.crates-io]
+# iced = { git = "https://github.com/iced-rs/iced.git", rev = "9d56b48" }
+# iced_core = { git = "https://github.com/iced-rs/iced.git", rev = "9d56b48" }
+# iced_widget = { git = "https://github.com/iced-rs/iced.git", rev = "9d56b48" }

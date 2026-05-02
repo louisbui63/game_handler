@@ -97,7 +97,7 @@ pub fn get_widget(
                 // .into()
             )
             .width(Length::FillPortion(1)),
-            iced::widget::Space::with_width(Length::FillPortion(2)),//.into(),
+            iced::widget::Space::new().width(Length::FillPortion(2)),//.into(),
             iced::widget::toggler(uses_default).on_toggle( move |a| {
                 Message::SettingDefaultChanged(k.clone(), a)
             })
@@ -194,7 +194,7 @@ pub fn get_widget(
                         );
                     }
                 } else {
-                    row.push(iced::widget::Space::with_width(Length::FillPortion(10)).into())
+                    row.push(iced::widget::Space::new().width(Length::FillPortion(10)).into())
                 }
                 col.push(
                     iced::widget::Row::with_children(row)
@@ -380,7 +380,7 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
     let run_module: iced::Element<'_, Message> = if let Some(g) = mg.selected {
         /*crate::theme::widget*/
         iced::widget::Row::with_children(vec![
-            iced::widget::Space::with_width(Length::Fill).into(),
+            iced::widget::Space::new().width(Length::Fill).into(),
             if !mg.games[g].is_running {
                 iced::widget::button(iced::widget::text("run"))
                     .on_press(Message::RunSelected)
@@ -401,7 +401,9 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
         .width(Length::FillPortion(2))
         .into()
     } else {
-        iced::widget::Space::with_width(Length::FillPortion(2)).into()
+        iced::widget::Space::new()
+            .width(Length::FillPortion(2))
+            .into()
     };
 
     let top_bar = iced::widget::Row::with_children(vec![
@@ -409,7 +411,9 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
         if let Some(i) = mg.selected {
             text(crate::duration_to_string(mg.games[i].time_played)).into()
         } else {
-            iced::widget::Space::with_width(Length::FillPortion(2)).into()
+            iced::widget::Space::new()
+                .width(Length::FillPortion(2))
+                .into()
         },
         run_module,
     ])
@@ -648,7 +652,7 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
         iced::widget::stack(vec![
             content.into(),
             column![
-                iced::widget::Space::with_height(Length::FillPortion(1)),
+                iced::widget::Space::new().height(Length::FillPortion(1)),
                 iced_aw::Card::new(iced::widget::text("Choose a banner"), {
                     let mut grid: crate::grid_widget::Grid<Message, _> =
                         crate::grid_widget::Grid::with_column_width(IMAGE_WIDTH as f32 + 20.);
@@ -758,7 +762,7 @@ pub fn get_view_widget(mg: &crate::MainGUI) -> iced::Element<'_, Message> {
                     }
                 })
                 .height(Length::FillPortion(10)),
-                iced::widget::Space::with_height(Length::FillPortion(1)),
+                iced::widget::Space::new().height(Length::FillPortion(1)),
             ]
             .into(),
         ])

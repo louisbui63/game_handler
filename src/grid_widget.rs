@@ -146,7 +146,7 @@ where
         }
     }
 
-    fn layout(&self, tree: &mut Tree, renderer: &Renderer, limits: &Limits) -> Node {
+    fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &Limits) -> Node {
         if self.elements.is_empty() {
             return Node::new(Size::ZERO);
         }
@@ -162,10 +162,10 @@ where
                 let mut layouts = Vec::with_capacity(self.elements.len());
                 let mut column_widths = Vec::<f32>::with_capacity(columns);
 
-                for (column, element) in (0..columns).cycle().zip(&self.elements) {
+                for (column, element) in (0..columns).cycle().zip(&mut self.elements) {
                     let layout =
                         element
-                            .as_widget()
+                            .as_widget_mut()
                             .layout(children.next().unwrap(), renderer, limits);
                     #[allow(clippy::option_if_let_else)]
                     match column_widths.get_mut(column) {
@@ -215,9 +215,9 @@ where
                 let margin = (max_width as usize - columns * column_width as usize) / columns;
                 ////////////
 
-                let layouts = self.elements.iter().map(|element| {
+                let layouts = self.elements.iter_mut().map(|element| {
                     let u = children.next().unwrap();
-                    let v = element.as_widget().layout(u, renderer, &column_limits);
+                    let v = element.as_widget_mut().layout(u, renderer, &column_limits);
                     v
                 });
 
@@ -280,7 +280,7 @@ where
     }
 
     fn operate(
-        &self,
+        &mut self,
         state: &mut Tree,
         layout: Layout<'_>,
         renderer: &Renderer,
@@ -288,12 +288,12 @@ where
     ) {
         for ((element, state), layout) in self
             .elements
-            .iter()
+            .iter_mut()
             .zip(&mut state.children)
             .zip(layout.children())
         {
             element
-                .as_widget()
+                .as_widget_mut()
                 .operate(state, layout, renderer, operation);
         }
     }
