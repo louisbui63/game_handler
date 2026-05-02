@@ -43,7 +43,9 @@ pub static DIRS: std::sync::LazyLock<directories::ProjectDirs> = std::sync::Lazy
 });
 
 fn main() -> iced::Result {
-    // File::create()
+    // There is no better afaik to force igpu, + nvidia is prone to ridiculous rendering bugs with
+    // wgpu, so...
+    unsafe { std::env::set_var("WGPU_POWER_PREF", "low") };
     flexi_logger::Logger::try_with_env_or_str("info")
         .unwrap()
         .log_to_file(
