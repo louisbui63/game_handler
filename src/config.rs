@@ -139,12 +139,16 @@ pub static CONFIG_ORDER: std::sync::LazyLock<Vec<(String, Vec<String>)>> =
         let mut out = vec![
             (
                 "launcher:launcher".to_owned(),
-                vec!["launcher:sgdb_api_key".to_owned()],
+                vec![
+                    "launcher:sgdb_api_key".to_owned(),
+                    "launcher:sort_locale".to_owned(),
+                ],
             ),
             (
                 "metadata".to_owned(),
                 vec![
                     "name".to_owned(),
+                    "sort_name".to_owned(),
                     "box_art".to_owned(),
                     "release_year".to_owned(),
                     "path_to_game".to_owned(),
@@ -191,8 +195,16 @@ pub static DEFAULT_CONFIG: std::sync::LazyLock<HashMap<String, (String, CValue)>
             ("SteamGridDB API key".to_owned(), CValue::Str(String::new())),
         );
         out.insert(
+            "launcher:sort_locale".to_owned(),
+            ("name sort locale".to_owned(), CValue::Str(String::new())),
+        );
+        out.insert(
             "name".to_owned(),
             ("name".to_owned(), CValue::Str(String::new())),
+        );
+        out.insert(
+            "sort_name".to_owned(),
+            ("sorting name".to_owned(), CValue::Str(String::new())),
         );
         out.insert(
             "box_art".to_owned(),
@@ -413,8 +425,16 @@ impl Cfg {
             .expect("unknown runner")
             .create_instance(&self, path.clone(), &default);
 
+        let sort_name = self.get_or_default("sort_name", &default).as_string();
+        let sort_name = if sort_name.is_empty() {
+            None
+        } else {
+            Some(sort_name)
+        };
+
         crate::games::Game {
             name: self.get_or_default("name", &default).as_string(),
+            sort_name,
             box_art: opt(box_art),
             release_year: isize::from_str(
                 &self.get_or_default("release_year", &default).as_string()[..],

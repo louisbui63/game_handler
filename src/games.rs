@@ -235,6 +235,7 @@ impl RunnerInstance for DummyRunnerInstance {}
 
 pub struct Game {
     pub name: String,
+    pub sort_name: Option<String>,
     pub box_art: Option<String>,
     pub release_year: Option<isize>,
     // pub image: image::RgbaImage,

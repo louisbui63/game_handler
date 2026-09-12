@@ -38,6 +38,7 @@ noop-waker = "0.1.0"
 serde = "1.0"
 sysinfo = "0.38.4"
 chrono = "0.4"
+icu = "2.3.1"
 
 # [patch.crates-io]
 # iced = { git = "https://github.com/iced-rs/iced.git", rev = "9d56b48" }

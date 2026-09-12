@@ -102,7 +102,7 @@ fn main() -> iced::Result {
     //     ..Default::default()
     // })
     iced::application(MainGUI::new, MainGUI::update, MainGUI::view)
-        .title("game_handler")
+        .title("Game Handler")
         .subscription(MainGUI::subscription)
         .theme(MainGUI::theme)
         .run()
@@ -312,17 +312,26 @@ impl MainGUI {
                 )
             })
             .collect();
-        //alphabetic sort
-        // games.sort_unstable_by_key(|a| a.name.clone());
-        sort::sort_none_selected(&mut games, sort::Sorts::Name.get_fn());
+
+        let default_config = get_default_config_with_vals(&DIRS.config_dir().join("settings.toml"));
+        let sort_alg = sort::Sorts::UnicodeName;
+
+        let locale = default_config
+            .get("launcher:sort_locale")
+            .unwrap()
+            .1
+            .as_string();
+        if !locale.is_empty() {
+            sort::set_locale(locale);
+        }
+
+        sort::sort_none_selected(&mut games, sort_alg.get_fn());
 
         (
             MainGUI {
                 games,
                 selected: None,
-                default_config: get_default_config_with_vals(
-                    &DIRS.config_dir().join("settings.toml"),
-                ),
+                default_config,
                 temp_settings: None,
                 grid_status: GridStatus::GamesGrid,
                 steam_grid_db: false,
@@ -333,16 +342,12 @@ impl MainGUI {
                 sgdb_async_status: SGDBAsyncStatus::default(),
                 time_played_db,
                 time_played_ty_db,
-                sort_alg: sort::Sorts::Name,
+                sort_alg,
                 log: iced::widget::text_editor::Content::new(),
             },
             iced::font::load(iced_fonts::NERD_FONT_BYTES).map(|_| Message::DoNothing),
             // Command::none(),
         )
-    }
-
-    fn title(&self) -> String {
-        String::from("Game Handler")
     }
 
     fn update(&mut self, message: Message) -> Command<Message> {
@@ -477,11 +482,19 @@ impl MainGUI {
                             .unwrap()
                             .write_all(to_write.as_bytes())
                             .unwrap();
-
-                        self.sort(self.sort_alg.get_fn());
                     }
                 }
                 if let Message::ApplyCloseSettings = message {
+                    let locale = self
+                        .default_config
+                        .get("launcher:sort_locale")
+                        .unwrap()
+                        .1
+                        .as_string();
+                    if !locale.is_empty() {
+                        sort::set_locale(locale);
+                    }
+                    self.sort(self.sort_alg.get_fn());
                     self.grid_status = GridStatus::GamesGrid;
                 }
                 Command::none()
